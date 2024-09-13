@@ -1,9 +1,13 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Lab1.Class;
 using Lab1.ViewModels;
+using LiveChartsCore.Defaults;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 
 namespace Lab1.Views;
 
@@ -144,6 +148,16 @@ public partial class MainView : UserControl
                     }
                 }
                 MainViewModel.Data.ProccedData(MainViewModel.PrimaryData);
+                MainViewModel.ObservablePoints.Clear();
+                for (int i = 0; i < MainViewModel.Data.X.Count; i++)
+                {
+                    MainViewModel.ObservablePoints.Add(new ObservablePoint(MainViewModel.Data.X[i], MainViewModel.Data.F[i]));
+                }
+                MainViewModel.ClassesPoints.Clear();
+                for (int i = 0; i < MainViewModel.Data.Classes.LeftBound.Count; i++)
+                {
+                    MainViewModel.ClassesPoints.Add(new ObservablePoint(MainViewModel.Data.ClassBoundaries[i], MainViewModel.Data.Classes.RelativeFrequency[i]));
+                }
                 
             }
         }

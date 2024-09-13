@@ -11,38 +11,47 @@ namespace Lab1.Class
     public class Data
     {
         public ObservableCollection<DataItem> Items { get; } = new ObservableCollection<DataItem>();
-        private double h {  get; set; }
-        private int M { get; set; }
-        public List<double> ClassBoundaries { get; set; } = new List<double>();
+        public ObservableCollection<double> F {  get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> X { get; } = new ObservableCollection<double>();
+        public Class Classes { get; set; } = new Class();
+        public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
         public Data()
         {
             
         }
         public void ProccedData(ObservableCollection<double> data)
         {
-            data.Remove(3.8);
-            data.Remove(5.0);
             Items.Clear();
+            F.Clear();
+            X.Clear();
+            Classes.ClearData();
+            ClassBoundaries.Clear();
             var variants = data.Distinct().OrderBy(x => x).ToList();
+            double empiricalCDF = 0.0;
             foreach (double v in variants)
             {
                 int frequency = data.Count(x => x == v);
+                double relativeFrequency = frequency / (double)data.Count;
+                empiricalCDF = Math.Round(empiricalCDF, 5);
+                empiricalCDF += Math.Round(relativeFrequency, 5);
+                empiricalCDF = Math.Round(empiricalCDF, 5);
+
                 Items.Add(new DataItem
                 {
                     Index = Items.Count() + 1,
                     Variant = v,
                     Frequency = frequency,
-                    RelativeFrequency = frequency / (double)data.Count
+                    RelativeFrequency = relativeFrequency,
+                    EmpiricalCDF = empiricalCDF
                 });
+                F.Add(empiricalCDF);
+                X.Add(v);
             }
             
-            StatisticalCharacteristics stats = new StatisticalCharacteristics(data, Items);
-            
-            //for (int i = 0; i < M + 1; i++)
-            //{
-            //    ClassBoundaries.Add(min + h * i);
-            //}
-            }
+            StatisticalCharacteristics stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries);
+
+
+        }
     }
     public class DataItem
     {
@@ -50,9 +59,33 @@ namespace Lab1.Class
         public double Variant { get; set; }
         public int Frequency { get; set; }
         public double RelativeFrequency { get; set; }
+        public double EmpiricalCDF { get; set; }
+    }
+    public class Class
+    {
+        public ObservableCollection<int> Index { get; set; } = new ObservableCollection<int>();
+        public ObservableCollection<double> LeftBound { get; set; } = new ObservableCollection<double>();
+        public ObservableCollection<int> Frequency { get; set; } = new ObservableCollection<int>();
+        public ObservableCollection<double> RelativeFrequency { get; set; } = new ObservableCollection<double>();
+        public void AddItem(int index, double bound, int frequency,  double relativeFrequency)
+        {
+            Index.Add(index);
+            LeftBound.Add(bound);
+            Frequency.Add(frequency);
+            RelativeFrequency.Add(relativeFrequency);
+        }
+        public void ClearData()
+        {
+            Index.Clear();
+            LeftBound.Clear();
+            Frequency.Clear();
+            RelativeFrequency.Clear();
+        }
     }
     public class StatisticalCharacteristics
     {
+        
+       
         public static Dictionary<int, double> Quantilies = new Dictionary<int, double>();
         public double M { get; set; }
         public double H { get; set; }
@@ -96,13 +129,27 @@ namespace Lab1.Class
         public double E_High { get; set; }
         public int J { get; set; }
         public int K { get; set; }
-        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items)
+        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, Class classes, ObservableCollection<double> classBoundaries)
         {
             double max = items.Max(x => x.Variant);
             double min = items.Min(x => x.Variant);
             N = data.Count();
             M = (int)Math.Sqrt(N);            
             H = (max - min) / M;
+            for (int i = 0; i < M + 1; i++)
+            {
+                classBoundaries.Add(Math.Round(min + H * i, 2));
+            }
+            for (int i = 0; i < M; i++)
+            {
+                
+                int frequency = data.Count(x => x >= classBoundaries[i] && x < classBoundaries[i + 1]);
+                if(i == M - 1)
+                {
+                    frequency = data.Count(x => x >= classBoundaries[i] && x <= classBoundaries[i + 1]);
+                }
+                classes.AddItem(i + 1, classBoundaries[i], frequency, frequency / (double)N);
+            }
             Mean = Statistics.Mean(data);
             Med = Statistics.Median(data);
             Sum2 = new List<double>();
@@ -164,4 +211,10 @@ namespace Lab1.Class
             var i1 = 1;
         }
     }
+    public class DataPoint
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
 }

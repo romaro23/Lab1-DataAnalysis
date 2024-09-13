@@ -13,19 +13,21 @@
 
 
 	<Grid>
-		<Grid ZIndex="1" Height="500" Width="800" Margin="680,100,0,0">
+		<Grid ZIndex="1" Height="500"  Width="800" Margin="680,100,0,0">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
-			<lvc:CartesianChart Series="{Binding Series}" 
+			<lvc:CartesianChart IsVisible="False" IsEnabled="False" Series="{Binding Series}"
+								XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
 								>
 				
 			</lvc:CartesianChart>
+			<lvc:CartesianChart Series="{Binding HistoSeries}" XAxes="{Binding HistoXAxes}"></lvc:CartesianChart>
 		</Grid>
 		<ScrollViewer>
 			<WrapPanel x:Name="ButtonPanel" Orientation="Horizontal" />
 		</ScrollViewer>
-		<DataGrid Height="200" Width="600" Margin="0,0,800,0"
+		<DataGrid Height="200" Width="700" Margin="0,-300,800,0"
 			ItemsSource="{Binding InstanceData}"
           IsReadOnly="True"
 	  GridLinesVisibility="All"
@@ -36,8 +38,80 @@
 				<DataGridTextColumn Header="Варіанта x"  Binding="{Binding Variant}"/>
 				<DataGridTextColumn Header="Частота n"  Binding="{Binding Frequency}"/>
 				<DataGridTextColumn Header="Відносна частота p"  Binding="{Binding RelativeFrequency}"/>
+			<DataGridTextColumn Header="Емпірична функція розподілу f"  Binding="{Binding EmpiricalCDF}"/>
 			</DataGrid.Columns>
 		</DataGrid>
+		<!-- <DataGrid Height="200" Width="700" Margin="0,300,800,0"
+			ItemsSource="{Binding MainViewModel}"
+          IsReadOnly="True"
+	  GridLinesVisibility="All"
+          BorderThickness="1" BorderBrush="Gray"
+				  >
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="N"  Binding="{Binding Index}"/>
+				<DataGridTextColumn Header="Class"  Binding="{Binding InstanceClass}"/>
+				<DataGridTextColumn Header="Частота n"  Binding="{Binding InstanceFrequency}"/>
+				<DataGridTextColumn Header="Відносна частота p"  Binding="{Binding InstanceRelativeFrequency}"/>
+			</DataGrid.Columns>
+		</DataGrid>
+		-->
+
+		
+
+		<Grid Width="450" Height="300" Margin="0,300,1050,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="*" />
+
+			</Grid.ColumnDefinitions>
+			<DataGrid
+				Grid.Column="0"
+              ItemsSource="{Binding InstanceIndex}"
+              IsReadOnly="True"
+              GridLinesVisibility="All"
+              BorderThickness="1" BorderBrush="Gray">
+
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Індекс" Binding="{Binding}" />
+				</DataGrid.Columns>
+			</DataGrid>
+			<DataGrid
+				Grid.Column="1"
+              ItemsSource="{Binding InstanceClass}"
+              IsReadOnly="True"
+              GridLinesVisibility="All"
+              BorderThickness="1" BorderBrush="Gray">
+				
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Клас" Binding="{Binding}" />
+				</DataGrid.Columns>
+			</DataGrid>
+			<DataGrid 
+				Grid.Column="2"
+				  ItemsSource="{Binding InstanceFrequency}"
+				  IsReadOnly="True"
+				  GridLinesVisibility="All"
+				  BorderThickness="1" BorderBrush="Gray">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Частота" Binding="{Binding}" />
+				</DataGrid.Columns>
+			</DataGrid>
+			<DataGrid 
+				Grid.Column="3"
+				  ItemsSource="{Binding InstanceRelativeFrequency}"
+				  IsReadOnly="True"
+				  GridLinesVisibility="All"
+				  BorderThickness="1" BorderBrush="Gray">
+				<DataGrid.Columns>
+					<DataGridTextColumn Width="*"
+						Header="Відносна частота" Binding="{Binding}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</Grid>
+		
 	</Grid>
 
 </UserControl>

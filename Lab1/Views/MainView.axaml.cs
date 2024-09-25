@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Lab1.Class;
 using Lab1.ViewModels;
 using LiveChartsCore.Defaults;
@@ -14,28 +15,75 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lab1.Views;
 
 public partial class MainView : UserControl
 {
+    ObservableCollection<double> PrimaryData = new ObservableCollection<double>();
     public MainView()
     {
         InitializeComponent();
         string baseDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\Lab1"));
         string relativePath = "Assets\\data_lab1,2";
         string fullPath = Path.Combine(baseDirectory, relativePath);
-        CreateButtonsForDirectories(fullPath);
         LoadQuantilies(fullPath);
         SetButton.Click += SetButton_Click;
+        Files.Click += Files_Click;       
+    }
 
-        
+    private async void Files_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {          
+            Title = "Open Text File",
+            AllowMultiple = false,
+        });
+        if (files != null && files.Count > 0)
+        {
+            var filePath = files[0].Path;
+            using (var stream = await files[0].OpenReadAsync())
+            using (var reader = new StreamReader(stream))
+            {
+                string line;                
+                PrimaryData.Clear();
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+
+                    var values = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var value in values)
+                    {
+                        if (double.TryParse(value, out var number))
+                        {
+                            PrimaryData.Add(number);
+                        }
+                    }
+                }
+                MainViewModel.Data.ProccedData(PrimaryData);
+                CreateHistogram();
+                CreateEmpiricalCDF();
+            }
+        }
     }
 
     private void SetButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        Data.M = double.Parse(NumOfClasees.Text);
+        double value;
+        if(double.TryParse(NumOfClasees.Text, out value))
+        {
+            Data.M = value;
+            MainViewModel.Data.ProccedData(PrimaryData);
+            CreateHistogram();
+            CreateEmpiricalCDF();
+        }
+        else
+        {
+            NumOfClasees.Text = string.Empty;
+        }
+        
     }
 
     private void LoadQuantilies(string path)
@@ -53,77 +101,7 @@ public partial class MainView : UserControl
             }
         }
     }
-    private void CreateButtonsForDirectories(string directoryPath)
-    {
-        ButtonPanel.Children.Clear();
-
-        if (Directory.Exists(directoryPath))
-        {
-            string[] directories = Directory.GetDirectories(directoryPath);
-
-            foreach (var dir in directories)
-            {
-                Button folderButton = new Button
-                {
-                    Content = Path.GetFileName(dir),
-                    Margin = new Thickness(5),
-                    Width = 100,
-                    Height = 50
-                };
-
-                folderButton.Click += (sender, e) => OnFolderButtonClick(dir);
-                ButtonPanel.Children.Add(folderButton);
-            }
-        }
-        else
-        {
-            Console.WriteLine("Directory not found: " + directoryPath);
-        }
-    }
-
-    private void CreateButtonsForFiles(string folderPath)
-    {
-        ButtonPanel.Children.Clear();
-
-        if (Directory.Exists(folderPath))
-        {
-            string[] files = Directory.GetFiles(folderPath);
-
-            Button backButton = new Button
-            {
-                Content = "Return",
-                Margin = new Thickness(5),
-                Width = 100,
-                Height = 50
-            };
-            backButton.Click += (sender, e) => CreateButtonsForDirectories(Path.GetDirectoryName(folderPath));
-            ButtonPanel.Children.Add(backButton);
-
-            foreach (var file in files)
-            {
-                Button fileButton = new Button
-                {
-                    Content = Path.GetFileName(file),
-                    Margin = new Thickness(5),
-                    Width = 150,
-                    Height = 50
-                };
-
-                fileButton.Click += (sender, e) => OnFileButtonClick(file);
-                ButtonPanel.Children.Add(fileButton);
-            }
-        }
-        else
-        {
-            Console.WriteLine("Folder not found: " + folderPath);
-        }
-    }
-
-    private void OnFolderButtonClick(string folderPath)
-    {
-        Console.WriteLine($"Clicked on folder: {folderPath}");
-        CreateButtonsForFiles(folderPath);
-    }
+    
     private void CreateHistogram()
     {
         double[] heights = new double[MainViewModel.Data.Classes.Count];
@@ -163,33 +141,5 @@ public partial class MainView : UserControl
         empiricalCDF.Plot.Axes.Margins(0, 0);
         empiricalCDF.Refresh();
     }
-    private void OnFileButtonClick(string filePath)
-    {
-        try
-        {
-            using (StreamReader reader = new StreamReader(filePath))
-            {
-                string line;
-                ObservableCollection<double> PrimaryData = new ObservableCollection<double>();
-                //MainViewModel.PrimaryData.Clear();
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (double.TryParse(line, out var value))
-                    {
-                        PrimaryData.Add(value);
-                    }
-                }
-                MainViewModel.Data.ProccedData(PrimaryData);
-                CreateHistogram();
-                CreateEmpiricalCDF();
-                
-            }
-        }
 
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-        Console.WriteLine($"Clicked on file: {filePath}");
-    }
 }

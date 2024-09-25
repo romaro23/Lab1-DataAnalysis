@@ -3,11 +3,18 @@ using Avalonia.Controls;
 using Lab1.Class;
 using Lab1.ViewModels;
 using LiveChartsCore.Defaults;
+using LiveChartsCore.Kernel;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using ScottPlot.Colormaps;
+using ScottPlot.Plottables;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lab1.Views;
 
@@ -21,12 +28,20 @@ public partial class MainView : UserControl
         string fullPath = Path.Combine(baseDirectory, relativePath);
         CreateButtonsForDirectories(fullPath);
         LoadQuantilies(fullPath);
+        SetButton.Click += SetButton_Click;
+
+        
     }
+
+    private void SetButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        Data.M = double.Parse(NumOfClasees.Text);
+    }
+
     private void LoadQuantilies(string path)
     {
         if (Directory.Exists(path)) 
         {
-            //path = path + "\\Quantilies";
             var files = Directory.GetFiles(path);
             string[] lines = File.ReadAllLines(files[0]);
             foreach (string line in lines)
@@ -36,28 +51,6 @@ public partial class MainView : UserControl
                 double value = double.Parse(parts[1]);
                 Class.StatisticalCharacteristics.Quantilies.Add(key, value);
             }
-            //try
-            //{
-            //    using (StreamReader reader = new StreamReader(path))
-            //    {
-            //        string line;
-            //        MainViewModel.PrimaryData.Clear();
-            //        while ((line = reader.ReadLine()) != null)
-            //        {
-            //            if (double.TryParse(line, out var value))
-            //            {
-            //                MainViewModel.PrimaryData.Add(value);
-            //            }
-            //        }
-            //        MainViewModel.Data.ProccedData(MainViewModel.PrimaryData);
-
-            //    }
-            //}
-
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex.Message);
-            //}
         }
     }
     private void CreateButtonsForDirectories(string directoryPath)
@@ -131,7 +124,45 @@ public partial class MainView : UserControl
         Console.WriteLine($"Clicked on folder: {folderPath}");
         CreateButtonsForFiles(folderPath);
     }
-
+    private void CreateHistogram()
+    {
+        double[] heights = new double[MainViewModel.Data.Classes.Count];
+        double[] leftEdges = new double[MainViewModel.Data.ClassBoundaries.Count - 1];
+        double[] rightEdges = new double[MainViewModel.Data.ClassBoundaries.Count - 1];
+        for (int i = 0; i < MainViewModel.Data.Classes.Count; i++)
+        {
+            heights[i] = MainViewModel.Data.Classes[i].RelativeFrequency;
+        }
+        for (int i = 0; i < MainViewModel.Data.ClassBoundaries.Count - 1; i++)
+        {
+            leftEdges[i] = MainViewModel.Data.ClassBoundaries[i];
+            rightEdges[i] = MainViewModel.Data.ClassBoundaries[i + 1];
+        }
+        AvaPlot histogram = this.Find<AvaPlot>("Histogram");
+        histogram.Plot.Clear();
+        for (int i = 0; i < leftEdges.Length; i++)
+        {
+            double centerPosition = (leftEdges[i] + rightEdges[i]) / 2;
+            double barWidth = rightEdges[i] - leftEdges[i];
+            Bar bar = new Bar();
+            bar.Position = centerPosition;
+            bar.Value = heights[i];
+            bar.Size = barWidth;
+            bar.FillColor = Color.FromColor(System.Drawing.Color.Orange);
+            histogram.Plot.Add.Bar(bar);
+        }
+        histogram.Plot.Axes.Margins(0, 0);
+        histogram.Refresh();
+    }
+    private void CreateEmpiricalCDF()
+    {
+        AvaPlot empiricalCDF = this.Find<AvaPlot>("EmpiricalCDF");
+        empiricalCDF.Plot.Clear();
+        var sp1 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.X.ToArray(), MainViewModel.Data.F.ToArray());
+        sp1.ConnectStyle = ConnectStyle.StepHorizontal;
+        empiricalCDF.Plot.Axes.Margins(0, 0);
+        empiricalCDF.Refresh();
+    }
     private void OnFileButtonClick(string filePath)
     {
         try
@@ -139,25 +170,18 @@ public partial class MainView : UserControl
             using (StreamReader reader = new StreamReader(filePath))
             {
                 string line;
-                MainViewModel.PrimaryData.Clear();
+                ObservableCollection<double> PrimaryData = new ObservableCollection<double>();
+                //MainViewModel.PrimaryData.Clear();
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (double.TryParse(line, out var value))
                     {
-                        MainViewModel.PrimaryData.Add(value);
+                        PrimaryData.Add(value);
                     }
                 }
-                MainViewModel.Data.ProccedData(MainViewModel.PrimaryData);
-                MainViewModel.ObservablePoints.Clear();
-                for (int i = 0; i < MainViewModel.Data.X.Count; i++)
-                {
-                    MainViewModel.ObservablePoints.Add(new ObservablePoint(MainViewModel.Data.X[i], MainViewModel.Data.F[i]));
-                }
-                MainViewModel.ClassesPoints.Clear();
-                for (int i = 0; i < MainViewModel.Data.Classes.LeftBound.Count; i++)
-                {
-                    MainViewModel.ClassesPoints.Add(new ObservablePoint(MainViewModel.Data.ClassBoundaries[i], MainViewModel.Data.Classes.RelativeFrequency[i]));
-                }
+                MainViewModel.Data.ProccedData(PrimaryData);
+                CreateHistogram();
+                CreateEmpiricalCDF();
                 
             }
         }

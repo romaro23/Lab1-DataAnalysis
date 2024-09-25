@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+			xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
+			 xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              xmlns:vm="clr-namespace:Lab1.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Lab1.Views.MainView"
@@ -17,12 +18,8 @@
 			<Grid.RowDefinitions>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
-			<lvc:CartesianChart IsVisible="False" IsEnabled="False" Series="{Binding Series}"
-								XAxes="{Binding XAxes}" YAxes="{Binding YAxes}"
-								>
-				
-			</lvc:CartesianChart>
-			<lvc:CartesianChart Series="{Binding HistoSeries}" XAxes="{Binding HistoXAxes}"></lvc:CartesianChart>
+			<ScottPlot:AvaPlot IsVisible="False" Name="Histogram"/>
+			<ScottPlot:AvaPlot IsVisible="True" Name="EmpiricalCDF"/>
 		</Grid>
 		<ScrollViewer>
 			<WrapPanel x:Name="ButtonPanel" Orientation="Horizontal" />
@@ -41,76 +38,25 @@
 			<DataGridTextColumn Header="Емпірична функція розподілу f"  Binding="{Binding EmpiricalCDF}"/>
 			</DataGrid.Columns>
 		</DataGrid>
-		<!-- <DataGrid Height="200" Width="700" Margin="0,300,800,0"
-			ItemsSource="{Binding MainViewModel}"
+		<DataGrid Height="200" Width="700" Margin="0,300,800,0"
+			ItemsSource="{Binding InstanceClass}"
           IsReadOnly="True"
 	  GridLinesVisibility="All"
           BorderThickness="1" BorderBrush="Gray"
 				  >
 			<DataGrid.Columns>
 				<DataGridTextColumn Header="N"  Binding="{Binding Index}"/>
-				<DataGridTextColumn Header="Class"  Binding="{Binding InstanceClass}"/>
-				<DataGridTextColumn Header="Частота n"  Binding="{Binding InstanceFrequency}"/>
-				<DataGridTextColumn Header="Відносна частота p"  Binding="{Binding InstanceRelativeFrequency}"/>
+				<DataGridTextColumn Header="Класс"  Binding="{Binding LeftBound}"/>
+				<DataGridTextColumn Header="Частота n"  Binding="{Binding Frequency}"/>
+				<DataGridTextColumn Header="Відносна частота p"  Binding="{Binding RelativeFrequency}"/>
+				<DataGridTextColumn Header="Емпірична функція розподілу"  Binding="{Binding EmpiricalCDF}"/>
 			</DataGrid.Columns>
+			
 		</DataGrid>
-		-->
-
-		
-
-		<Grid Width="450" Height="300" Margin="0,300,1050,0">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto" />
-
-				<ColumnDefinition Width="Auto" />
-				<ColumnDefinition Width="Auto" />
-				<ColumnDefinition Width="*" />
-
-			</Grid.ColumnDefinitions>
-			<DataGrid
-				Grid.Column="0"
-              ItemsSource="{Binding InstanceIndex}"
-              IsReadOnly="True"
-              GridLinesVisibility="All"
-              BorderThickness="1" BorderBrush="Gray">
-
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Індекс" Binding="{Binding}" />
-				</DataGrid.Columns>
-			</DataGrid>
-			<DataGrid
-				Grid.Column="1"
-              ItemsSource="{Binding InstanceClass}"
-              IsReadOnly="True"
-              GridLinesVisibility="All"
-              BorderThickness="1" BorderBrush="Gray">
-				
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Клас" Binding="{Binding}" />
-				</DataGrid.Columns>
-			</DataGrid>
-			<DataGrid 
-				Grid.Column="2"
-				  ItemsSource="{Binding InstanceFrequency}"
-				  IsReadOnly="True"
-				  GridLinesVisibility="All"
-				  BorderThickness="1" BorderBrush="Gray">
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Частота" Binding="{Binding}" />
-				</DataGrid.Columns>
-			</DataGrid>
-			<DataGrid 
-				Grid.Column="3"
-				  ItemsSource="{Binding InstanceRelativeFrequency}"
-				  IsReadOnly="True"
-				  GridLinesVisibility="All"
-				  BorderThickness="1" BorderBrush="Gray">
-				<DataGrid.Columns>
-					<DataGridTextColumn Width="*"
-						Header="Відносна частота" Binding="{Binding}" />
-				</DataGrid.Columns>
-			</DataGrid>
-		</Grid>
+		<StackPanel VerticalAlignment="Bottom">
+			<TextBox Width="30" x:Name="NumOfClasees" HorizontalAlignment="Center"></TextBox>
+			<Button x:Name="SetButton" HorizontalAlignment="Center" Content="Set" ></Button>
+		</StackPanel>
 		
 	</Grid>
 

@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MathNet.Numerics.Statistics;
+using System.Runtime.Serialization;
+using Avalonia.Automation.Provider;
 namespace Lab1.Class
 {
     public class Data
@@ -13,8 +15,9 @@ namespace Lab1.Class
         public ObservableCollection<DataItem> Items { get; } = new ObservableCollection<DataItem>();
         public ObservableCollection<double> F {  get; } = new ObservableCollection<double>();
         public ObservableCollection<double> X { get; } = new ObservableCollection<double>();
-        public Class Classes { get; set; } = new Class();
+        public ObservableCollection<Class> Classes { get; } = new ObservableCollection<Class>();
         public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
+        public static double M { get; set; } = 0.0;
         public Data()
         {
             
@@ -24,17 +27,15 @@ namespace Lab1.Class
             Items.Clear();
             F.Clear();
             X.Clear();
-            Classes.ClearData();
+            Classes.Clear();
             ClassBoundaries.Clear();
             var variants = data.Distinct().OrderBy(x => x).ToList();
             double empiricalCDF = 0.0;
             foreach (double v in variants)
             {
                 int frequency = data.Count(x => x == v);
-                double relativeFrequency = frequency / (double)data.Count;
-                empiricalCDF = Math.Round(empiricalCDF, 5);
-                empiricalCDF += Math.Round(relativeFrequency, 5);
-                empiricalCDF = Math.Round(empiricalCDF, 5);
+                double relativeFrequency = (double)frequency / (double)data.Count;
+                empiricalCDF += relativeFrequency;
 
                 Items.Add(new DataItem
                 {
@@ -48,7 +49,7 @@ namespace Lab1.Class
                 X.Add(v);
             }
             
-            StatisticalCharacteristics stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries);
+            StatisticalCharacteristics stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M);
 
 
         }
@@ -63,29 +64,14 @@ namespace Lab1.Class
     }
     public class Class
     {
-        public ObservableCollection<int> Index { get; set; } = new ObservableCollection<int>();
-        public ObservableCollection<double> LeftBound { get; set; } = new ObservableCollection<double>();
-        public ObservableCollection<int> Frequency { get; set; } = new ObservableCollection<int>();
-        public ObservableCollection<double> RelativeFrequency { get; set; } = new ObservableCollection<double>();
-        public void AddItem(int index, double bound, int frequency,  double relativeFrequency)
-        {
-            Index.Add(index);
-            LeftBound.Add(bound);
-            Frequency.Add(frequency);
-            RelativeFrequency.Add(relativeFrequency);
-        }
-        public void ClearData()
-        {
-            Index.Clear();
-            LeftBound.Clear();
-            Frequency.Clear();
-            RelativeFrequency.Clear();
-        }
+        public int Index { get; set; }
+        public double LeftBound { get; set; }
+        public int Frequency { get; set; }
+        public double RelativeFrequency { get; set; }
+        public double EmpiricalCDF { get; set; }
     }
     public class StatisticalCharacteristics
-    {
-        
-       
+    {       
         public static Dictionary<int, double> Quantilies = new Dictionary<int, double>();
         public double M { get; set; }
         public double H { get; set; }
@@ -129,17 +115,32 @@ namespace Lab1.Class
         public double E_High { get; set; }
         public int J { get; set; }
         public int K { get; set; }
-        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, Class classes, ObservableCollection<double> classBoundaries)
+        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_)
         {
+            M = M_;
             double max = items.Max(x => x.Variant);
             double min = items.Min(x => x.Variant);
             N = data.Count();
-            M = (int)Math.Sqrt(N);            
+            if(M == 0.0)
+            {
+                if (N >= 100)
+                {
+                    var sqr = (int)Math.Pow((double)N, (double)1 / 3);
+                    M = (sqr % 2 == 0) ? sqr - 1 : sqr;
+                }
+                else if (N < 100)
+                {
+                    var sqr = (int)Math.Sqrt(N);
+                    M = (sqr % 2 == 0) ? sqr - 1 : sqr;
+                }
+            } 
+                
             H = (max - min) / M;
             for (int i = 0; i < M + 1; i++)
             {
-                classBoundaries.Add(Math.Round(min + H * i, 2));
+                classBoundaries.Add(min + H * i);
             }
+            double empiricalCDF = 0.0;
             for (int i = 0; i < M; i++)
             {
                 
@@ -148,7 +149,15 @@ namespace Lab1.Class
                 {
                     frequency = data.Count(x => x >= classBoundaries[i] && x <= classBoundaries[i + 1]);
                 }
-                classes.AddItem(i + 1, classBoundaries[i], frequency, frequency / (double)N);
+                empiricalCDF += frequency / (double)N;
+                classes.Add(new Class
+                {
+                    Index = i + 1,
+                    LeftBound = classBoundaries[i],
+                    Frequency = frequency,
+                    RelativeFrequency = frequency / (double)N,
+                    EmpiricalCDF = empiricalCDF
+                });
             }
             Mean = Statistics.Mean(data);
             Med = Statistics.Median(data);
@@ -208,7 +217,6 @@ namespace Lab1.Class
             MedHigh = sortedData[K - 1];
             var leftInterval = Mean - 1.96 * S_;
             var rightInterval = Mean + 1.96 * S_;
-            var i1 = 1;
         }
     }
     public class DataPoint

@@ -20,5 +20,6 @@ public class MainViewModel : ViewModelBase
     public static Data Data { get; set; } = new Data();
     public ObservableCollection<DataItem> InstanceData => Data.Items;
     public ObservableCollection<Class> InstanceClass => Data.Classes;
+    public ObservableCollection<StatisticalCharacteristics.Row> Rows => Data.Rows;
 
 }

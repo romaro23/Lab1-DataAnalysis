@@ -25,10 +25,11 @@
 			<ScottPlot:AvaPlot Grid.Row="1" Name="EmpiricalCDF"/>
 		</Grid>
 		<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="Files" Content="Open file" ></Button>
-		<Grid Width="680" HorizontalAlignment="Left" Margin="30,200,0,0">
+		<Grid Width="680" HorizontalAlignment="Left" Margin="30,80,0,0">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="200"/>
 				<RowDefinition Height="70"/>
+				<RowDefinition Height="200"/>
 				<RowDefinition Height="200"/>
 			</Grid.RowDefinitions>
 			<DataGrid Grid.Row="0" 
@@ -59,6 +60,19 @@
 					<DataGridTextColumn Header="Емпірична функція розподілу f"  Binding="{Binding EmpiricalCDF,Converter={StaticResource Converter}}"/>
 				</DataGrid.Columns>
 
+			</DataGrid>
+			<DataGrid Grid.Row="3"			ItemsSource="{Binding Rows}"	
+			  IsReadOnly="True"
+		  GridLinesVisibility="All"
+			  BorderThickness="1" BorderBrush="Gray"
+				  >
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Характеристика"  Binding="{Binding InstanceCharacterisation}"/>
+					<DataGridTextColumn Header="Оцінка"  Binding="{Binding Estimate,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="Середньоквадратичне відхилення оцінки" Binding="{Binding Deviation,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (лівий)"  Binding="{Binding LeftInterval,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (правий)"  Binding="{Binding RightInterval,Converter={StaticResource Converter}}"/>
+</DataGrid.Columns>
 			</DataGrid>
 			<StackPanel Margin="5" Grid.Row="1" VerticalAlignment="Bottom">
 				<TextBox Watermark="M" Width="30" x:Name="NumOfClasees" HorizontalAlignment="Center"></TextBox>

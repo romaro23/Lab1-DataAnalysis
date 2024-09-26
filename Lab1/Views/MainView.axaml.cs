@@ -63,12 +63,12 @@ public partial class MainView : UserControl
                     }
                 }
                 MainViewModel.Data.ProccedData(PrimaryData);
+
                 CreateHistogram();
                 CreateEmpiricalCDF();
             }
         }
     }
-
     private void SetButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         double value;

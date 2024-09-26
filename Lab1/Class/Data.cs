@@ -1,26 +1,25 @@
-﻿using Avalonia.Controls.Platform;
+﻿using Lab1.ViewModels;
+using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MathNet.Numerics.Statistics;
-using System.Runtime.Serialization;
-using Avalonia.Automation.Provider;
+using static Lab1.Class.StatisticalCharacteristics;
 namespace Lab1.Class
 {
     public class Data
     {
         public ObservableCollection<DataItem> Items { get; } = new ObservableCollection<DataItem>();
-        public ObservableCollection<double> F {  get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> F { get; } = new ObservableCollection<double>();
         public ObservableCollection<double> X { get; } = new ObservableCollection<double>();
         public ObservableCollection<Class> Classes { get; } = new ObservableCollection<Class>();
         public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
+        public ObservableCollection<Row> Rows { get; set; } = new ObservableCollection<Row>();
         public static double M { get; set; } = 0.0;
+        public StatisticalCharacteristics stats { get; set; }
         public Data()
         {
-            
+
         }
         public void ProccedData(ObservableCollection<double> data)
         {
@@ -48,9 +47,9 @@ namespace Lab1.Class
                 F.Add(empiricalCDF);
                 X.Add(v);
             }
-            
-            StatisticalCharacteristics stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M);
 
+            stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M);
+            stats.SetRow(Rows);
 
         }
     }
@@ -71,7 +70,7 @@ namespace Lab1.Class
         public double EmpiricalCDF { get; set; }
     }
     public class StatisticalCharacteristics
-    {       
+    {
         public static Dictionary<int, double> Quantilies = new Dictionary<int, double>();
         public double M { get; set; }
         public double H { get; set; }
@@ -79,12 +78,12 @@ namespace Lab1.Class
         public List<double> Sum3 { get; set; }
         public List<double> Sum4 { get; set; }
         public double Mean { get; set; }
-        public double Med {  get; set; }
-        public double S {  get; set; }
+        public double Med { get; set; }
+        public double S { get; set; }
         public double S_ { get; set; }
         public double W { get; set; }
         public double A { get; set; }
-        public double A_ { get;set; }
+        public double A_ { get; set; }
         public double E { get; set; }
         public double E_ { get; set; }
         public double X { get; set; }
@@ -93,7 +92,7 @@ namespace Lab1.Class
         public double WDeviation { get; set; }
         public double ADeviation { get; set; }
         public double A_Deviation { get; set; }
-        public double EDeviation  { get; set; }
+        public double EDeviation { get; set; }
         public double E_Deviation { get; set; }
         public int N { get; set; }
         public double T { get; set; }
@@ -115,13 +114,14 @@ namespace Lab1.Class
         public double E_High { get; set; }
         public int J { get; set; }
         public int K { get; set; }
+        
         public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_)
         {
             M = M_;
             double max = items.Max(x => x.Variant);
             double min = items.Min(x => x.Variant);
             N = data.Count();
-            if(M == 0.0)
+            if (M == 0.0)
             {
                 if (N >= 100)
                 {
@@ -133,8 +133,8 @@ namespace Lab1.Class
                     var sqr = (int)Math.Sqrt(N);
                     M = (sqr % 2 == 0) ? sqr - 1 : sqr;
                 }
-            } 
-                
+            }
+
             H = (max - min) / M;
             for (int i = 0; i < M + 1; i++)
             {
@@ -143,9 +143,9 @@ namespace Lab1.Class
             double empiricalCDF = 0.0;
             for (int i = 0; i < M; i++)
             {
-                
+
                 int frequency = data.Count(x => x >= classBoundaries[i] && x < classBoundaries[i + 1]);
-                if(i == M - 1)
+                if (i == M - 1)
                 {
                     frequency = data.Count(x => x >= classBoundaries[i] && x <= classBoundaries[i + 1]);
                 }
@@ -181,12 +181,12 @@ namespace Lab1.Class
             X = 1 / Math.Sqrt(E + 3);
             MeanDeviation = S_ / Math.Sqrt(N);
             S_Deviation = S_ / Math.Sqrt(2 * N);
-            WDeviation = W * Math.Sqrt((1 + 2 * Math.Pow(W,2)) / (2 * N));
+            WDeviation = W * Math.Sqrt((1 + 2 * Math.Pow(W, 2)) / (2 * N));
             ADeviation = Math.Sqrt((double)(6 * (N - 2)) / ((N + 1) * (N + 3)));
             A_Deviation = 0.4479;
             EDeviation = Math.Sqrt((24 * N * (N - 2) * (N - 3)) / (Math.Pow((N + 1), 2) * (N + 3) * (N + 5)));
             E_Deviation = 0.8721;
-            if(N > 0 && N <= 120)
+            if (N > 0 && N <= 120)
             {
                 T = Quantilies[N - 1];
             }
@@ -209,7 +209,7 @@ namespace Lab1.Class
             EHigh = E + T * EDeviation;
             E_Low = E_ - T * E_Deviation;
             E_High = E_ + T * E_Deviation;
-            
+
             J = (int)(Math.Round((double)N / 2 - 1.96 * (Math.Sqrt(N) / 2)));
             K = (int)(Math.Round((double)N / 2 + 1 + 1.96 * (Math.Sqrt(N) / 2)));
             var sortedData = data.OrderBy(x => x).ToList();
@@ -218,11 +218,30 @@ namespace Lab1.Class
             var leftInterval = Mean - 1.96 * S_;
             var rightInterval = Mean + 1.96 * S_;
         }
+        public class Row
+        {
+            public string InstanceCharacterisation { get; set; }
+            public double Estimate { get; set; }
+            public double Deviation { get; set; }
+            public double LeftInterval { get; set; }
+            public double RightInterval { get; set; }
+            public Row(string name, double estimate, double deviation, double leftInterval, double rightInterval)
+            {
+                InstanceCharacterisation = name;
+                Estimate = estimate;
+                Deviation = deviation;
+                LeftInterval = leftInterval;
+                RightInterval = rightInterval;
+            }
+        }
+        public void SetRow(ObservableCollection<Row> Rows)
+        {
+            Rows.Clear();
+            Rows.Add(new Row("Середнє арифметичне", Mean, MeanDeviation, MeanLow, MeanHigh));
+            Rows.Add(new Row("Медіана", Med, 0, MedLow, MedHigh));
+            Rows.Add(new Row("Середньоквадратичне відхилення", S_, S_Deviation, S_Low, S_High));
+            Rows.Add(new Row("Коефіцієнт асиметрії", A_, A_Deviation, A_Low, A_High));
+            Rows.Add(new Row("Коефіцієнт ексцесу", E_, E_Deviation, E_Low, E_High));
+        }
     }
-    public class DataPoint
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-    }
-
 }

@@ -13,9 +13,6 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        LiveCharts.Configure(config =>
-    config.HasMap<DataPoint>(
-        (dp, index) => new(dp.X, dp.Y)));
     }
 
     public override void OnFrameworkInitializationCompleted()

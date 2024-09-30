@@ -1,4 +1,5 @@
-﻿using Lab1.ViewModels;
+﻿using Avalonia.Controls;
+using Lab1.ViewModels;
 using MathNet.Numerics.Statistics;
 using System;
 using System.Collections.Generic;
@@ -14,8 +15,10 @@ namespace Lab1.Class
         public ObservableCollection<double> X { get; } = new ObservableCollection<double>();
         public ObservableCollection<Class> Classes { get; } = new ObservableCollection<Class>();
         public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
+        public ObservableCollection<double> KDE { get; set; } = new ObservableCollection<double>();
         public ObservableCollection<Row> Rows { get; set; } = new ObservableCollection<Row>();
         public static double M { get; set; } = 0.0;
+        public static double Bandwidth { get; set; } = 0.0;
         public StatisticalCharacteristics stats { get; set; }
         public Data()
         {
@@ -28,6 +31,7 @@ namespace Lab1.Class
             X.Clear();
             Classes.Clear();
             ClassBoundaries.Clear();
+            KDE.Clear();
             var variants = data.Distinct().OrderBy(x => x).ToList();
             double empiricalCDF = 0.0;
             foreach (double v in variants)
@@ -48,7 +52,7 @@ namespace Lab1.Class
                 X.Add(v);
             }
 
-            stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M);
+            stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M, KDE, Bandwidth);
             stats.SetRow(Rows);
 
         }
@@ -114,10 +118,13 @@ namespace Lab1.Class
         public double E_High { get; set; }
         public int J { get; set; }
         public int K { get; set; }
-        
-        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_)
+        public double Kernel { get; set; }
+        public double F { get; set; }
+        public double Bandwidth { get; set; }
+        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_, ObservableCollection<double> kde, double Bandwidth_)
         {
             M = M_;
+            Bandwidth = Bandwidth_;
             double max = items.Max(x => x.Variant);
             double min = items.Min(x => x.Variant);
             N = data.Count();
@@ -217,6 +224,17 @@ namespace Lab1.Class
             MedHigh = sortedData[K - 1];
             var leftInterval = Mean - 1.96 * S_;
             var rightInterval = Mean + 1.96 * S_;
+            if(Bandwidth == 0.0)
+            {
+                Bandwidth = S * Math.Pow(N, -1.0 / 5.0);
+            }          
+            foreach (var v in sortedData)
+            {
+                var x = (Mean - v) / Bandwidth;
+                Kernel = 1 / Math.Sqrt(2 * 3.14) * Math.Exp(-(Math.Pow(x, 2) / 2));
+                kde.Add((1 / (N * Bandwidth) * Kernel) * N);
+            }
+            
         }
         public class Row
         {

@@ -31,7 +31,24 @@ public partial class MainView : UserControl
         string fullPath = Path.Combine(baseDirectory, relativePath);
         LoadQuantilies(fullPath);
         SetButton.Click += SetButton_Click;
+        SetBandwidth.Click += SetBandwidth_Click;
         Files.Click += Files_Click;       
+    }
+
+    private void SetBandwidth_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        double value;
+        if (double.TryParse(BandwidthBox.Text, out value))
+        {
+            Data.Bandwidth = value;
+            MainViewModel.Data.ProccedData(PrimaryData);
+            CreateHistogram();
+            CreateEmpiricalCDF();
+        }
+        else
+        {
+            BandwidthBox.Text = string.Empty;
+        }
     }
 
     private async void Files_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -129,7 +146,8 @@ public partial class MainView : UserControl
             bar.FillColor = Color.FromColor(System.Drawing.Color.Orange);
             histogram.Plot.Add.Bar(bar);
         }
-        histogram.Plot.Axes.Margins(0, 0);
+        histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), MainViewModel.Data.KDE.ToArray());
+        histogram.Plot.Axes.Margins(0, 0);       
         histogram.Refresh();
     }
     private void CreateEmpiricalCDF()

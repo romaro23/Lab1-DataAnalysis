@@ -27,12 +27,12 @@
 		<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="Files" Content="Open file" ></Button>
 		<Grid Width="680" HorizontalAlignment="Left" Margin="30,80,0,0">
 			<Grid.RowDefinitions>
-				<RowDefinition Height="200"/>
 				<RowDefinition Height="70"/>
 				<RowDefinition Height="200"/>
 				<RowDefinition Height="200"/>
+				<RowDefinition Height="200"/>
 			</Grid.RowDefinitions>
-			<DataGrid Grid.Row="0" 
+			<DataGrid Grid.Row="1" 
 			ItemsSource="{Binding InstanceData}"
           IsReadOnly="True"
 	  GridLinesVisibility="All"
@@ -74,9 +74,11 @@
 					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (правий)"  Binding="{Binding RightInterval,Converter={StaticResource Converter}}"/>
 </DataGrid.Columns>
 			</DataGrid>
-			<StackPanel Margin="5" Grid.Row="1" VerticalAlignment="Bottom">
+			<StackPanel Orientation="Horizontal" Margin="5" Grid.Row="0" VerticalAlignment="Bottom">
 				<TextBox Watermark="M" Width="30" x:Name="NumOfClasees" HorizontalAlignment="Center"></TextBox>
 				<Button x:Name="SetButton" HorizontalAlignment="Center" Content="Set M" ></Button>
+				<TextBox Watermark="Bandwidth" Width="30" x:Name="BandwidthBox" HorizontalAlignment="Center"></TextBox>
+				<Button x:Name="SetBandwidth" HorizontalAlignment="Center" Content="Set bandwidth" ></Button>
 			</StackPanel>
 		</Grid>
 		

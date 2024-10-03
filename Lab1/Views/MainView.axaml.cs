@@ -32,7 +32,39 @@ public partial class MainView : UserControl
         LoadQuantilies(fullPath);
         SetButton.Click += SetButton_Click;
         SetBandwidth.Click += SetBandwidth_Click;
-        Files.Click += Files_Click;       
+        Files.Click += Files_Click;
+        FindAnomalies.Click += FindAnomalies_Click;
+        RemoveAnomalies.Click += RemoveAnomalies_Click;
+    }
+
+    private void RemoveAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        ShowAnomalies.IsOpen = false;
+        MainViewModel.Data.stats.RemoveAnomalies(PrimaryData);
+        MainViewModel.Data.ProccedData(PrimaryData);
+        CreateHistogram();
+        CreateEmpiricalCDF();
+    }
+
+    private void FindAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if(PrimaryData.Count != 0)
+        {
+            ShowAnomalies.IsOpen = true;
+            double leftInterval;
+            double rightInterval;
+            List<double> anomalies = MainViewModel.Data.stats.FindAnomalies(PrimaryData, out leftInterval, out rightInterval);
+            var selectedValues = anomalies.Select(index => PrimaryData[(int)index]);
+            AnomaliesList.Text = "Anomalies: " + string.Join(", ", selectedValues);
+            AvaPlot Anomalies = this.Find<AvaPlot>("Anomalies");
+            Anomalies.Plot.Clear();
+            Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
+            Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+            Anomalies.Plot.Add.HorizontalLine(rightInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+            Anomalies.Refresh();
+            
+        }
+        
     }
 
     private void SetBandwidth_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -80,7 +112,6 @@ public partial class MainView : UserControl
                     }
                 }
                 MainViewModel.Data.ProccedData(PrimaryData);
-
                 CreateHistogram();
                 CreateEmpiricalCDF();
             }
@@ -146,8 +177,12 @@ public partial class MainView : UserControl
             bar.FillColor = Color.FromColor(System.Drawing.Color.Orange);
             histogram.Plot.Add.Bar(bar);
         }
-        histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), MainViewModel.Data.KDE.ToArray());
-        histogram.Plot.Axes.Margins(0, 0);       
+        double maxHistogramHeight = heights.Max();
+        double maxKDEHeight = MainViewModel.Data.KDE.Max();
+        double scaleFactor = maxHistogramHeight / maxKDEHeight;
+        var scaledKDE = MainViewModel.Data.KDE.Select(value => value * scaleFactor).ToArray();
+        histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE);
+        histogram.Plot.Axes.Margins(0, 0);
         histogram.Refresh();
     }
     private void CreateEmpiricalCDF()

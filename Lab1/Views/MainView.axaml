@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-			 xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+			 xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia" xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
              xmlns:vm="clr-namespace:Lab1.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Lab1.Views.MainView"
@@ -25,14 +25,14 @@
 			<ScottPlot:AvaPlot Grid.Row="1" Name="EmpiricalCDF"/>
 		</Grid>
 		<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="Files" Content="Open file" ></Button>
-		<Grid Width="680" HorizontalAlignment="Left" Margin="30,80,0,0">
+		<Grid Width="680" HorizontalAlignment="Left" Margin="30,50,0,0">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="70"/>
 				<RowDefinition Height="200"/>
 				<RowDefinition Height="200"/>
 				<RowDefinition Height="200"/>
 			</Grid.RowDefinitions>
-			<DataGrid Grid.Row="1" 
+			<DataGrid Margin="5" Grid.Row="1" 
 			ItemsSource="{Binding InstanceData}"
           IsReadOnly="True"
 	  GridLinesVisibility="All"
@@ -61,7 +61,7 @@
 				</DataGrid.Columns>
 
 			</DataGrid>
-			<DataGrid Grid.Row="3"			ItemsSource="{Binding Rows}"	
+			<DataGrid Margin="5" Grid.Row="3"			ItemsSource="{Binding Rows}"	
 			  IsReadOnly="True"
 		  GridLinesVisibility="All"
 			  BorderThickness="1" BorderBrush="Gray"
@@ -76,13 +76,26 @@
 			</DataGrid>
 			<StackPanel Orientation="Horizontal" Margin="5" Grid.Row="0" VerticalAlignment="Bottom">
 				<TextBox Watermark="M" Width="30" x:Name="NumOfClasees" HorizontalAlignment="Center"></TextBox>
-				<Button x:Name="SetButton" HorizontalAlignment="Center" Content="Set M" ></Button>
+				<Button Margin="5,0,5,0" x:Name="SetButton" HorizontalAlignment="Center" Content="Set M" ></Button>
 				<TextBox Watermark="Bandwidth" Width="30" x:Name="BandwidthBox" HorizontalAlignment="Center"></TextBox>
-				<Button x:Name="SetBandwidth" HorizontalAlignment="Center" Content="Set bandwidth" ></Button>
+				<Button Margin="5,0,5,0" x:Name="SetBandwidth" HorizontalAlignment="Center" Content="Set bandwidth" ></Button>
+				<Button x:Name="FindAnomalies" HorizontalAlignment="Center" Content="Find anomalies" ></Button>
 			</StackPanel>
 		</Grid>
-		
-		
+		<dialogHost:DialogHost x:Name="ShowAnomalies" ZIndex="2" IsOpen="False" CloseOnClickAway="True">
+
+			<dialogHost:DialogHost.DialogContent>
+				<StackPanel>
+					<ScottPlot:AvaPlot Height="200" Width="500" Name="Anomalies"/>
+					<TextBlock   Foreground="Black" Width="150" x:Name="AnomaliesList"></TextBlock>
+					<Button	x:Name="RemoveAnomalies" HorizontalAlignment="Center" Content="Remove anomalies"></Button>
+					
+				</StackPanel>
+			</dialogHost:DialogHost.DialogContent>
+
+		</dialogHost:DialogHost>
+
+
 	</Grid>
 
 </UserControl>

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using static Lab1.Class.StatisticalCharacteristics;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Lab1.Class
 {
     public class Data
@@ -121,12 +122,14 @@ namespace Lab1.Class
         public double Kernel { get; set; }
         public double F { get; set; }
         public double Bandwidth { get; set; }
+        public double Max { get; set; }
+        public double Min { get; set; }
         public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_, ObservableCollection<double> kde, double Bandwidth_)
         {
             M = M_;
             Bandwidth = Bandwidth_;
-            double max = items.Max(x => x.Variant);
-            double min = items.Min(x => x.Variant);
+            Max = items.Max(x => x.Variant);
+            Min = items.Min(x => x.Variant);
             N = data.Count();
             if (M == 0.0)
             {
@@ -142,10 +145,10 @@ namespace Lab1.Class
                 }
             }
 
-            H = (max - min) / M;
+            H = (Max - Min) / M;
             for (int i = 0; i < M + 1; i++)
             {
-                classBoundaries.Add(min + H * i);
+                classBoundaries.Add(Min + H * i);
             }
             double empiricalCDF = 0.0;
             for (int i = 0; i < M; i++)
@@ -166,8 +169,9 @@ namespace Lab1.Class
                     EmpiricalCDF = empiricalCDF
                 });
             }
-            Mean = Statistics.Mean(data);
-            Med = Statistics.Median(data);
+            
+            Mean = Math.Round(Statistics.Mean(data), 4);
+            Med = Math.Round(Statistics.Median(data), 4);
             Sum2 = new List<double>();
             Sum3 = new List<double>();
             Sum4 = new List<double>();
@@ -178,20 +182,20 @@ namespace Lab1.Class
                 Sum3.Add(Math.Pow(x, 3));
                 Sum4.Add(Math.Pow(x, 4));
             }
-            S = Math.Sqrt(Sum2.Sum() / N);
-            S_ = Statistics.StandardDeviation(data);
-            W = S_ / Mean;
-            A = Sum3.Sum() / (N * Math.Pow(S, 3));
-            A_ = Statistics.Skewness(data);
-            E = Sum4.Sum() / (N * Math.Pow(S, 4)) - 3;
-            E_ = Statistics.Kurtosis(data);
-            X = 1 / Math.Sqrt(E + 3);
-            MeanDeviation = S_ / Math.Sqrt(N);
-            S_Deviation = S_ / Math.Sqrt(2 * N);
-            WDeviation = W * Math.Sqrt((1 + 2 * Math.Pow(W, 2)) / (2 * N));
-            ADeviation = Math.Sqrt((double)(6 * (N - 2)) / ((N + 1) * (N + 3)));
+            S = Math.Round(Math.Sqrt(Math.Round(Sum2.Sum(), 4) / N), 4);
+            S_ = Math.Round(Statistics.StandardDeviation(data), 4);
+            W = Math.Round(S_ / Mean, 4);
+            A = Math.Round(Math.Round(Sum3.Sum(),4) / (N * Math.Pow(S, 3)),4);
+            A_ = Math.Round(Statistics.Skewness(data), 4);
+            E = Math.Round(Math.Round(Sum4.Sum(), 4) / (N * Math.Pow(S, 4)) - 3,4);
+            E_ = Math.Round(Statistics.Kurtosis(data), 4);
+            X = Math.Round(1 / Math.Sqrt(E + 3),4);
+            MeanDeviation = Math.Round(S_ / Math.Sqrt(N), 4);
+            S_Deviation = Math.Round(S_ / Math.Sqrt(2 * N), 4);
+            WDeviation = Math.Round(W * Math.Sqrt((1 + 2 * Math.Pow(W, 2)) / (2 * N)),4);
+            ADeviation = Math.Round(Math.Sqrt((double)(6 * (N - 2)) / ((N + 1) * (N + 3))), 4);
             A_Deviation = 0.4479;
-            EDeviation = Math.Sqrt((24 * N * (N - 2) * (N - 3)) / (Math.Pow((N + 1), 2) * (N + 3) * (N + 5)));
+            EDeviation = Math.Round(Math.Sqrt((24 * N * (N - 2) * (N - 3)) / (Math.Pow((N + 1), 2) * (N + 3) * (N + 5))), 4);
             E_Deviation = 0.8721;
             if (N > 0 && N <= 120)
             {
@@ -202,28 +206,27 @@ namespace Lab1.Class
                 T = 1.96;
             }
 
-            MeanLow = Mean - T * MeanDeviation;
-            MeanHigh = Mean + T * MeanDeviation;
-            S_Low = S - T * S_Deviation;
-            S_High = S + T * S_Deviation;
-            WLow = W - T * WDeviation;
-            WHigh = W + T * WDeviation;
-            ALow = A - T * ADeviation;
-            AHigh = A + T * ADeviation;
-            A_Low = A_ - T * A_Deviation;
-            A_High = A_ + T * A_Deviation;
-            ELow = E - T * EDeviation;
-            EHigh = E + T * EDeviation;
-            E_Low = E_ - T * E_Deviation;
-            E_High = E_ + T * E_Deviation;
+            MeanLow = Math.Round(Mean - T * MeanDeviation, 4);
+            MeanHigh = Math.Round(Mean + T * MeanDeviation, 4);
+            S_Low = Math.Round(S_ - T * S_Deviation, 4);
+            S_High = Math.Round(S_ + T * S_Deviation, 4);
+            WLow = Math.Round(W - T * WDeviation, 4);
+            WHigh = Math.Round(W + T * WDeviation, 4);
+            ALow = Math.Round(A - T * ADeviation, 4);
+            AHigh = Math.Round(A + T * ADeviation, 4);
+            A_Low = Math.Round(A_ - T * A_Deviation, 4);
+            A_High = Math.Round(A_ + T * A_Deviation, 4);
+            ELow = Math.Round(E - T * EDeviation, 4);
+            EHigh = Math.Round(E + T * EDeviation, 4);
+            E_Low = Math.Round(E_ - T * E_Deviation, 4);
+            E_High = Math.Round(E_ + T * E_Deviation, 4);
 
             J = (int)(Math.Round((double)N / 2 - 1.96 * (Math.Sqrt(N) / 2)));
             K = (int)(Math.Round((double)N / 2 + 1 + 1.96 * (Math.Sqrt(N) / 2)));
             var sortedData = data.OrderBy(x => x).ToList();
             MedLow = sortedData[J - 1];
             MedHigh = sortedData[K - 1];
-            var leftInterval = Mean - 1.96 * S_;
-            var rightInterval = Mean + 1.96 * S_;
+            
             if(Bandwidth == 0.0)
             {
                 Bandwidth = S * Math.Pow(N, -1.0 / 5.0);
@@ -232,7 +235,7 @@ namespace Lab1.Class
             {
                 var x = (Mean - v) / Bandwidth;
                 Kernel = 1 / Math.Sqrt(2 * 3.14) * Math.Exp(-(Math.Pow(x, 2) / 2));
-                kde.Add((1 / (N * Bandwidth) * Kernel) * N);
+                kde.Add(1 / (N * Bandwidth) * Kernel);
             }
             
         }
@@ -260,6 +263,35 @@ namespace Lab1.Class
             Rows.Add(new Row("Середньоквадратичне відхилення", S_, S_Deviation, S_Low, S_High));
             Rows.Add(new Row("Коефіцієнт асиметрії", A_, A_Deviation, A_Low, A_High));
             Rows.Add(new Row("Коефіцієнт ексцесу", E_, E_Deviation, E_Low, E_High));
+            Rows.Add(new Row("Мінімум", Min,0,0,0));
+            Rows.Add(new Row("Максимум", Max,0,0,0));
+        }
+        public List<double> FindAnomalies(ObservableCollection<double> data, out double leftInterval, out double rightInterval)
+        {
+            leftInterval = Mean - 1.96 * S_;
+            rightInterval = Mean + 1.96 * S_;
+            double li = leftInterval;
+            double ri = rightInterval;
+            List<double> anomalies = new List<double>();
+            for (int i = 0; i < data.Count; i++)
+            {
+                if (data[i] < li || data[i] > ri)
+                {
+                    anomalies.Add(i);
+                }
+            }
+            return anomalies;
+        }
+        public void RemoveAnomalies(ObservableCollection<double> data)
+        {
+            double leftInterval = Mean - 1.96 * S_;
+            double rightInterval = Mean + 1.96 * S_;
+            var filteredData = data.Where(value => value >= leftInterval && value <= rightInterval).ToList();
+            data.Clear();
+            foreach (var value in filteredData)
+            {
+                data.Add(value);
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using static Lab1.Class.StatisticalCharacteristics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 namespace Lab1.Class
@@ -12,8 +13,9 @@ namespace Lab1.Class
     public class Data
     {
         public ObservableCollection<DataItem> Items { get; } = new ObservableCollection<DataItem>();
-        public ObservableCollection<double> F { get; } = new ObservableCollection<double>();
-        public ObservableCollection<double> X { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> EmpiricalCDF { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> EmpiricalCDFQuantilies { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> Variants { get; } = new ObservableCollection<double>();
         public ObservableCollection<Class> Classes { get; } = new ObservableCollection<Class>();
         public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
         public ObservableCollection<double> KDE { get; set; } = new ObservableCollection<double>();
@@ -28,8 +30,9 @@ namespace Lab1.Class
         public void ProccedData(ObservableCollection<double> data)
         {
             Items.Clear();
-            F.Clear();
-            X.Clear();
+            EmpiricalCDF.Clear();
+            EmpiricalCDFQuantilies.Clear();
+            Variants.Clear();
             Classes.Clear();
             ClassBoundaries.Clear();
             KDE.Clear();
@@ -49,13 +52,20 @@ namespace Lab1.Class
                     RelativeFrequency = relativeFrequency,
                     EmpiricalCDF = empiricalCDF
                 });
-                F.Add(empiricalCDF);
-                X.Add(v);
+                EmpiricalCDF.Add(empiricalCDF);
+                Variants.Add(v);
             }
 
             stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M, KDE, Bandwidth);
             stats.SetRow(Rows);
-
+            foreach(var f in Items)
+            {
+                var i = MathNet.Numerics.Distributions.Normal.InvCDF(0, 1, f.EmpiricalCDF);
+                f.EmpiricalCDFQuantile = i;
+                EmpiricalCDFQuantilies.Add(Math.Round(i, 2));
+            }
+            EmpiricalCDFQuantilies[EmpiricalCDFQuantilies.Count - 1] = 0;
+            Items[Items.Count - 1].EmpiricalCDFQuantile = 0;
         }
     }
     public class DataItem
@@ -65,6 +75,7 @@ namespace Lab1.Class
         public int Frequency { get; set; }
         public double RelativeFrequency { get; set; }
         public double EmpiricalCDF { get; set; }
+        public double EmpiricalCDFQuantile {  get; set; }
     }
     public class Class
     {
@@ -77,6 +88,8 @@ namespace Lab1.Class
     public class StatisticalCharacteristics
     {
         public static Dictionary<int, double> Quantilies = new Dictionary<int, double>();
+        public double tA {  get; set; }
+        public double tE { get; set; }
         public double M { get; set; }
         public double H { get; set; }
         public List<double> Sum2 { get; set; }
@@ -292,6 +305,34 @@ namespace Lab1.Class
             {
                 data.Add(value);
             }
+        }
+        public bool IsAsymmetryZero()
+        {
+            var t = A_ / A_Deviation;
+            if (N > 0 && N <= 120)
+            {
+                T = Quantilies[N - 1];
+            }
+            else
+            {
+                T = 1.96;
+            }
+            if(t < 0) { t = t * -1; }
+            return (t <= T) ? true : false;
+        }
+        public bool IsExcessZero()
+        {
+            var t = E_ / E_Deviation;
+            if (N > 0 && N <= 120)
+            {
+                T = Quantilies[N - 1];
+            }
+            else
+            {
+                T = 1.96;
+            }
+            if (t < 0) { t = t * -1; }
+            return (t <= T) ? true : false;
         }
     }
 }

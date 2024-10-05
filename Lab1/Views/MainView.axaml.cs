@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using DynamicData;
 using Lab1.Class;
 using Lab1.ViewModels;
 using LiveChartsCore.Defaults;
@@ -35,6 +36,25 @@ public partial class MainView : UserControl
         Files.Click += Files_Click;
         FindAnomalies.Click += FindAnomalies_Click;
         RemoveAnomalies.Click += RemoveAnomalies_Click;
+        Distribution.Click += Distribution_Click;
+    }
+
+    private void Distribution_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if(MainViewModel.Data.Items.Count != 0)
+        {
+            ShowDistribution.IsOpen = true;
+            if (MainViewModel.Data.stats.IsAsymmetryZero() == true && MainViewModel.Data.stats.IsExcessZero() == true)
+            {
+                DistributionByCoefficient.Text = "Нормальний розподіл ідентифіковано";
+            }
+            else
+            {
+                DistributionByCoefficient.Text = "Нормальний розподіл не ідентифіковано";
+            }
+            CreateDistribution();
+        }
+        
     }
 
     private void RemoveAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -61,6 +81,7 @@ public partial class MainView : UserControl
             Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
             Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
             Anomalies.Plot.Add.HorizontalLine(rightInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+            Anomalies.Plot.Axes.Margins(0, 0);
             Anomalies.Refresh();
             
         }
@@ -189,10 +210,27 @@ public partial class MainView : UserControl
     {
         AvaPlot empiricalCDF = this.Find<AvaPlot>("EmpiricalCDF");
         empiricalCDF.Plot.Clear();
-        var sp1 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.X.ToArray(), MainViewModel.Data.F.ToArray());
+        var sp1 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.Variants.ToArray(), MainViewModel.Data.EmpiricalCDF.ToArray());
         sp1.ConnectStyle = ConnectStyle.StepHorizontal;
         empiricalCDF.Plot.Axes.Margins(0, 0);
         empiricalCDF.Refresh();
+    }
+    private void CreateDistribution()
+    {
+        double[] xValues = MainViewModel.Data.Variants.ToArray();
+        xValues = xValues.Take(xValues.Length - 1).ToArray();
+        double[] yValues = MainViewModel.Data.EmpiricalCDFQuantilies.ToArray();
+        yValues = yValues.Take(yValues.Length - 1).ToArray();
+        AvaPlot distribution = this.Find<AvaPlot>("DistributionPlot");
+        distribution.Plot.Clear();
+        distribution.Plot.Add.Scatter(xValues, yValues);
+        double minX = xValues.Min();
+        double maxX = xValues.Max();
+        double minY = yValues.Min();
+        double maxY = yValues.Max();
+        distribution.Plot.Add.Line(minX, minY, maxX, maxY);
+        distribution.Plot.Axes.Margins(0, 0);
+        distribution.Refresh();
     }
 
 }

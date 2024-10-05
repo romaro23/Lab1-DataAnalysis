@@ -44,6 +44,7 @@
 					<DataGridTextColumn Header="Частота n"  Binding="{Binding Frequency}"/>
 					<DataGridTextColumn Header="Відносна частота p"  Binding="{Binding RelativeFrequency,Converter={StaticResource Converter}}"/>
 					<DataGridTextColumn Header="Емпірична функція розподілу f"  Binding="{Binding EmpiricalCDF,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="u"  Binding="{Binding EmpiricalCDFQuantile,Converter={StaticResource Converter}}"/>
 				</DataGrid.Columns>
 			</DataGrid>
 			<DataGrid Grid.Row="2" 
@@ -79,15 +80,27 @@
 				<Button Margin="5,0,5,0" x:Name="SetButton" HorizontalAlignment="Center" Content="Set M" ></Button>
 				<TextBox Watermark="Bandwidth" Width="30" x:Name="BandwidthBox" HorizontalAlignment="Center"></TextBox>
 				<Button Margin="5,0,5,0" x:Name="SetBandwidth" HorizontalAlignment="Center" Content="Set bandwidth" ></Button>
-				<Button x:Name="FindAnomalies" HorizontalAlignment="Center" Content="Find anomalies" ></Button>
+				<Button Margin="5,0,5,0" x:Name="FindAnomalies" HorizontalAlignment="Center" Content="Find anomalies" ></Button>
+				<Button x:Name="Distribution" HorizontalAlignment="Center" Content="Distribution" ></Button>
 			</StackPanel>
 		</Grid>
+		<dialogHost:DialogHost x:Name="ShowDistribution" ZIndex="2" IsOpen="False" CloseOnClickAway="True">
+<dialogHost:DialogHost.DialogContent>
+				<StackPanel>
+					<TextBlock   Foreground="Black" Text="2.  Ідентифікація на основі коефіцієнтів асиметрії та ексцесу"/>
+					<TextBlock   Foreground="Black" x:Name="DistributionByCoefficient"/>
+					<TextBlock   Foreground="Black" Text="3. Ідентифікація на основі ймовірнісного паперу"/>
+					<ScottPlot:AvaPlot Height="200" Width="500" Name="DistributionPlot"/>
+				</StackPanel>
+			</dialogHost:DialogHost.DialogContent>
+
+		</dialogHost:DialogHost>
 		<dialogHost:DialogHost x:Name="ShowAnomalies" ZIndex="2" IsOpen="False" CloseOnClickAway="True">
 
 			<dialogHost:DialogHost.DialogContent>
 				<StackPanel>
 					<ScottPlot:AvaPlot Height="200" Width="500" Name="Anomalies"/>
-					<TextBlock   Foreground="Black" Width="150" x:Name="AnomaliesList"></TextBlock>
+					<TextBlock   Foreground="Black" TextWrapping="Wrap" x:Name="AnomaliesList"></TextBlock>
 					<Button	x:Name="RemoveAnomalies" HorizontalAlignment="Center" Content="Remove anomalies"></Button>
 					
 				</StackPanel>

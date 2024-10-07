@@ -170,7 +170,7 @@ public partial class MainView : UserControl
             }
         }
     }
-    
+    //4
     private void CreateHistogram()
     {
         double[] heights = new double[MainViewModel.Data.Classes.Count];
@@ -198,6 +198,7 @@ public partial class MainView : UserControl
             bar.FillColor = Color.FromColor(System.Drawing.Color.Orange);
             histogram.Plot.Add.Bar(bar);
         }
+        //5
         double maxHistogramHeight = heights.Max();
         double maxKDEHeight = MainViewModel.Data.KDE.Max();
         double scaleFactor = maxHistogramHeight / maxKDEHeight;
@@ -206,6 +207,7 @@ public partial class MainView : UserControl
         histogram.Plot.Axes.Margins(0, 0);
         histogram.Refresh();
     }
+    //6
     private void CreateEmpiricalCDF()
     {
         AvaPlot empiricalCDF = this.Find<AvaPlot>("EmpiricalCDF");

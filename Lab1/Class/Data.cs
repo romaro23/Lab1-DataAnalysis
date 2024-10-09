@@ -99,20 +99,12 @@ namespace Lab1.Class
         public List<double> Sum4 { get; set; }
         public double Mean { get; set; }
         public double Med { get; set; }
-        public double S { get; set; }
         public double S_ { get; set; }
-        public double W { get; set; }
-        public double A { get; set; }
         public double A_ { get; set; }
-        public double E { get; set; }
         public double E_ { get; set; }
-        public double X { get; set; }
         public double MeanDeviation { get; set; }
         public double S_Deviation { get; set; }
-        public double WDeviation { get; set; }
-        public double ADeviation { get; set; }
         public double A_Deviation { get; set; }
-        public double EDeviation { get; set; }
         public double E_Deviation { get; set; }
         public int N { get; set; }
         public double T { get; set; }
@@ -122,14 +114,8 @@ namespace Lab1.Class
         public double MedHigh { get; set; }
         public double S_Low { get; set; }
         public double S_High { get; set; }
-        public double WLow { get; set; }
-        public double WHigh { get; set; }
-        public double ALow { get; set; }
-        public double AHigh { get; set; }
         public double A_Low { get; set; }
         public double A_High { get; set; }
-        public double ELow { get; set; }
-        public double EHigh { get; set; }
         public double E_Low { get; set; }
         public double E_High { get; set; }
         public int J { get; set; }
@@ -186,7 +172,7 @@ namespace Lab1.Class
                 });
                 //
             }
-            
+            //7
             Mean = Statistics.Mean(data);
             Med = Statistics.Median(data);
             Sum2 = new List<double>();
@@ -199,43 +185,23 @@ namespace Lab1.Class
                 Sum3.Add(Math.Pow(x, 3));
                 Sum4.Add(Math.Pow(x, 4));
             }
-            S = Math.Sqrt(Sum2.Sum()/ N);
             S_ = Statistics.StandardDeviation(data);
-            W = S_ / Mean;
-            A = Sum3.Sum() / (N * Math.Pow(S, 3));
             A_ = Statistics.Skewness(data);
-            E = Sum4.Sum() / (N * Math.Pow(S, 4)) - 3;
             E_ = Statistics.Kurtosis(data);
-            X = 1 / Math.Sqrt(E + 3);
             MeanDeviation = S_ / Math.Sqrt(N);
             S_Deviation = S_ / Math.Sqrt(2 * N);
-            WDeviation = W * Math.Sqrt((1 + 2 * Math.Pow(W, 2)) / (2 * N));
-            ADeviation = Math.Sqrt((double)(6 * (N - 2)) / ((N + 1) * (N + 3)));
             A_Deviation = Math.Sqrt((double)(6 * N * (N - 1)) / ((N - 2) * (N + 1) * (N + 3)));
-            EDeviation = Math.Sqrt((24 * N * (N - 2) * (N - 3)) / (Math.Pow((N + 1), 2) * (N + 3) * (N + 5)));
-            E_Deviation = Math.Sqrt(24 * N * Math.Pow(N - 1, 2) /((N - 3) * (N - 2) * (N + 3) * (N + 5)));
-
-            if (N > 0 && N <= 120)
-            {
-                T = Quantilies[N - 1];
-            }
-            else
-            {
-                T = 1.96;
-            }
-
+            double firstPart = (N - 3) * (N - 2);
+            double secondPart = (N + 3) * (N + 5);
+            double result = firstPart * secondPart;
+            E_Deviation = Math.Sqrt(24 * N * Math.Pow(N - 1, 2) / result);
+            T = GetQuantile(N, 0.05);
             MeanLow = Mean - T * MeanDeviation;
             MeanHigh = Mean + T * MeanDeviation;
             S_Low = S_ - T * S_Deviation;
             S_High = S_ + T * S_Deviation;
-            WLow = W - T * WDeviation;
-            WHigh = W + T * WDeviation;
-            ALow = A - T * ADeviation;
-            AHigh = A + T * ADeviation;
             A_Low = A_ - T * A_Deviation;
             A_High = A_ + T * A_Deviation;
-            ELow = E - T * EDeviation;
-            EHigh = E + T * EDeviation;
             E_Low = E_ - T * E_Deviation;
             E_High = E_ + T * E_Deviation;
 
@@ -244,17 +210,23 @@ namespace Lab1.Class
             var sortedData = data.OrderBy(x => x).ToList();
             MedLow = sortedData[J - 1];
             MedHigh = sortedData[K - 1];
-            
+            //
             //5
             if(Bandwidth == 0.0)
             {
                 Bandwidth = S_ * Math.Pow(N, -1.0 / 5.0);
-            }          
+            }
+            double sum = 0;
             foreach (var v in sortedData)
             {
-                var x = (Mean - v) / Bandwidth;
-                Kernel = 1 / Math.Sqrt(2 * 3.14) * Math.Exp(-(Math.Pow(x, 2) / 2));
-                kde.Add(1 / (N * Bandwidth) * Kernel);
+                sum = 0;
+                for(int i = 0; i < N; i++)
+                {
+                    var x = (v - sortedData[i]) / Bandwidth;
+                    Kernel = 1 / Math.Sqrt(2 * 3.14) * Math.Exp(-(Math.Pow(x, 2) / 2));
+                    sum += Kernel;
+                }                
+                kde.Add(1 / (N * Bandwidth) * sum);
             }
             //
         }
@@ -274,6 +246,10 @@ namespace Lab1.Class
                 RightInterval = rightInterval;
             }
         }
+        private double GetQuantile(int N, double alpha)
+        {
+            return MathNet.Numerics.Distributions.StudentT.InvCDF(0.0, 1.0, (double)N - 1, 1 - alpha / 2);
+        }
         public void SetRow(ObservableCollection<Row> Rows)
         {
             Rows.Clear();
@@ -285,6 +261,7 @@ namespace Lab1.Class
             Rows.Add(new Row("Мінімум", Min,0,0,0));
             Rows.Add(new Row("Максимум", Max,0,0,0));
         }
+        //8
         public List<double> FindAnomalies(ObservableCollection<double> data, out double leftInterval, out double rightInterval)
         {
             leftInterval = Mean - 1.96 * S_;
@@ -312,31 +289,18 @@ namespace Lab1.Class
                 data.Add(value);
             }
         }
+        //9
         public bool IsAsymmetryZero()
         {
             var t = A_ / A_Deviation;
-            if (N > 0 && N <= 120)
-            {
-                T = Quantilies[N - 1];
-            }
-            else
-            {
-                T = 1.96;
-            }
-            if(t < 0) { t = t * -1; }
+            T = GetQuantile(N, 0.05);
+            if (t < 0) { t = t * -1; }
             return (t <= T) ? true : false;
         }
         public bool IsExcessZero()
         {
             var t = E_ / E_Deviation;
-            if (N > 0 && N <= 120)
-            {
-                T = Quantilies[N - 1];
-            }
-            else
-            {
-                T = 1.96;
-            }
+            T = GetQuantile(N, 0.05);
             if (t < 0) { t = t * -1; }
             return (t <= T) ? true : false;
         }

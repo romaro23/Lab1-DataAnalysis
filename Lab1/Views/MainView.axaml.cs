@@ -38,7 +38,7 @@ public partial class MainView : UserControl
         RemoveAnomalies.Click += RemoveAnomalies_Click;
         Distribution.Click += Distribution_Click;
     }
-
+    //9
     private void Distribution_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if(MainViewModel.Data.Items.Count != 0)
@@ -56,7 +56,7 @@ public partial class MainView : UserControl
         }
         
     }
-
+    //
     private void RemoveAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         ShowAnomalies.IsOpen = false;
@@ -65,7 +65,7 @@ public partial class MainView : UserControl
         CreateHistogram();
         CreateEmpiricalCDF();
     }
-
+    //8
     private void FindAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if(PrimaryData.Count != 0)
@@ -87,7 +87,7 @@ public partial class MainView : UserControl
         }
         
     }
-
+    //
     private void SetBandwidth_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         double value;
@@ -199,10 +199,7 @@ public partial class MainView : UserControl
             histogram.Plot.Add.Bar(bar);
         }
         //5
-        double maxHistogramHeight = heights.Max();
-        double maxKDEHeight = MainViewModel.Data.KDE.Max();
-        double scaleFactor = maxHistogramHeight / maxKDEHeight;
-        var scaledKDE = MainViewModel.Data.KDE.Select(value => value * scaleFactor).ToArray();
+        var scaledKDE = MainViewModel.Data.KDE.Select(value => value * MainViewModel.Data.stats.H).ToArray();
         histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE);
         histogram.Plot.Axes.Margins(0, 0);
         histogram.Refresh();
@@ -217,6 +214,7 @@ public partial class MainView : UserControl
         empiricalCDF.Plot.Axes.Margins(0, 0);
         empiricalCDF.Refresh();
     }
+    //10
     private void CreateDistribution()
     {
         double[] xValues = MainViewModel.Data.Variants.ToArray();
@@ -226,11 +224,6 @@ public partial class MainView : UserControl
         AvaPlot distribution = this.Find<AvaPlot>("DistributionPlot");
         distribution.Plot.Clear();
         distribution.Plot.Add.Scatter(xValues, yValues);
-        double minX = xValues.Min();
-        double maxX = xValues.Max();
-        double minY = yValues.Min();
-        double maxY = yValues.Max();
-        distribution.Plot.Add.Line(minX, minY, maxX, maxY);
         distribution.Plot.Axes.Margins(0, 0);
         distribution.Refresh();
     }

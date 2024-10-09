@@ -14,7 +14,7 @@ namespace Lab1.Class
         {
             if (value is double doubleValue)
             {
-                return Math.Round(doubleValue, 2);
+                return Math.Round(doubleValue, 5);
             }
             return value;
         }

@@ -173,8 +173,15 @@ namespace Lab1.Class
                 //
             }
             //7
-            Mean = Statistics.Mean(data);
-            Med = Statistics.Median(data);
+            Mean = data.Sum() / data.Count();
+            var sorted = data.OrderBy(x => x).ToList();
+            if (N % 2 == 0)
+            {                
+                Med = (sorted[N / 2 - 1] + sorted[N / 2]) / 2.0;
+            }
+            else {
+                Med = sorted[N / 2];
+            }
             Sum2 = new List<double>();
             Sum3 = new List<double>();
             Sum4 = new List<double>();
@@ -185,9 +192,12 @@ namespace Lab1.Class
                 Sum3.Add(Math.Pow(x, 3));
                 Sum4.Add(Math.Pow(x, 4));
             }
-            S_ = Statistics.StandardDeviation(data);
-            A_ = Statistics.Skewness(data);
-            E_ = Statistics.Kurtosis(data);
+            var S = Math.Sqrt(Sum2.Sum() / N);
+            var A = Sum3.Sum() / (N * Math.Pow(S, 3));
+            var E = Sum4.Sum() / (N * Math.Pow(S, 4)) - 3;
+            S_ = Math.Sqrt(Sum2.Sum() / (N - 1));
+            A_ = (Math.Sqrt(N * (N- 1)) / (N - 2)) * A;
+            E_ = (Math.Pow(N, 2) - 1) / ((N - 2) * (N - 3)) * (E + (6.0 / (N + 1)));
             MeanDeviation = S_ / Math.Sqrt(N);
             S_Deviation = S_ / Math.Sqrt(2 * N);
             A_Deviation = Math.Sqrt((double)(6 * N * (N - 1)) / ((N - 2) * (N + 1) * (N + 3)));

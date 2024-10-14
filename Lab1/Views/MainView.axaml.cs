@@ -78,10 +78,14 @@ public partial class MainView : UserControl
             AnomaliesList.Text = "Anomalies: " + string.Join(", ", selectedValues);
             AvaPlot Anomalies = this.Find<AvaPlot>("Anomalies");
             Anomalies.Plot.Clear();
-            Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
-            Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+            var scatter = Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
+            scatter.LegendText = "Розкид значень";
+            var line1 = Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+            line1.LegendText = "Межі";
             Anomalies.Plot.Add.HorizontalLine(rightInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
             Anomalies.Plot.Axes.Margins(0, 0);
+            Anomalies.Plot.XLabel("Індекс значення");
+            Anomalies.Plot.YLabel("Значення з вибірки");
             Anomalies.Refresh();
             
         }
@@ -200,8 +204,11 @@ public partial class MainView : UserControl
         }
         //5
         var scaledKDE = MainViewModel.Data.KDE.Select(value => value * MainViewModel.Data.stats.H).ToArray();
-        histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE);
+        var scatter = histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE, color: Color.FromColor(System.Drawing.Color.Blue));
+        scatter.LegendText = "KDE";
         histogram.Plot.Axes.Margins(0, 0);
+        histogram.Plot.XLabel("Елементи з вибірки");
+        histogram.Plot.YLabel("Відносна частота класів та значення KDE");
         histogram.Refresh();
     }
     //6
@@ -211,7 +218,10 @@ public partial class MainView : UserControl
         empiricalCDF.Plot.Clear();
         var sp1 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.Variants.ToArray(), MainViewModel.Data.EmpiricalCDF.ToArray());
         sp1.ConnectStyle = ConnectStyle.StepHorizontal;
+        sp1.LegendText = "EmpiricalCDF";
         empiricalCDF.Plot.Axes.Margins(0, 0);
+        empiricalCDF.Plot.XLabel("Елементи з вибірки");
+        empiricalCDF.Plot.YLabel("Значення емпіричної функції");
         empiricalCDF.Refresh();
     }
     //10
@@ -223,8 +233,11 @@ public partial class MainView : UserControl
         yValues = yValues.Take(yValues.Length - 1).ToArray();
         AvaPlot distribution = this.Find<AvaPlot>("DistributionPlot");
         distribution.Plot.Clear();
-        distribution.Plot.Add.Scatter(xValues, yValues);
+        var scatter = distribution.Plot.Add.Scatter(xValues, yValues);
+        scatter.LegendText = "Значення квантилів";
         distribution.Plot.Axes.Margins(0, 0);
+        distribution.Plot.XLabel("Елементи з вибірки");
+        distribution.Plot.YLabel("Квантилі ЕФР");
         distribution.Refresh();
     }
 

@@ -1,6 +1,10 @@
-﻿using Avalonia.Controls;
+﻿using Accord.Statistics.Kernels;
+using Avalonia.Controls;
+using Avalonia.Data.Converters;
 using Lab1.ViewModels;
 using MathNet.Numerics.Statistics;
+using ScottPlot;
+using ScottPlot.Interactivity.UserActionResponses;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,13 +12,20 @@ using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using static Lab1.Class.StatisticalCharacteristics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+
 namespace Lab1.Class
 {
     public class Data
     {
+        public PearsonProbability PearsonProbability { get; set; } = new PearsonProbability();
         public ObservableCollection<DataItem> Items { get; } = new ObservableCollection<DataItem>();
         public ObservableCollection<double> EmpiricalCDF { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> DistributionFunction { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> DensityFunction { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> Frequency { get; } = new ObservableCollection<double>();
         public ObservableCollection<double> EmpiricalCDFQuantilies { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> T { get; } = new ObservableCollection<double>();
+        public ObservableCollection<double> Z { get; } = new ObservableCollection<double>();
         public ObservableCollection<double> Variants { get; } = new ObservableCollection<double>();
         public ObservableCollection<Class> Classes { get; } = new ObservableCollection<Class>();
         public ObservableCollection<double> ClassBoundaries { get; set; } = new ObservableCollection<double>();
@@ -29,13 +40,18 @@ namespace Lab1.Class
         }
         public void ProccedData(ObservableCollection<double> data)
         {
+            Frequency.Clear();
             Items.Clear();
             EmpiricalCDF.Clear();
+            DensityFunction.Clear();
+            DistributionFunction.Clear();
             EmpiricalCDFQuantilies.Clear();
             Variants.Clear();
             Classes.Clear();
             ClassBoundaries.Clear();
             KDE.Clear();
+            T.Clear();
+            Z.Clear();
             //2
             var variants = data.Distinct().OrderBy(x => x).ToList();
             double empiricalCDF = 0.0;
@@ -44,7 +60,6 @@ namespace Lab1.Class
                 int frequency = data.Count(x => x == v);
                 double relativeFrequency = (double)frequency / (double)data.Count;
                 empiricalCDF += relativeFrequency;
-
                 Items.Add(new DataItem
                 {
                     Index = Items.Count() + 1,
@@ -58,16 +73,34 @@ namespace Lab1.Class
                 Variants.Add(v);
             }
 
-            stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M, KDE, Bandwidth);
-            stats.SetRow(Rows);
+            stats = new StatisticalCharacteristics(data, Items, Classes, ClassBoundaries, M, KDE, Bandwidth, DistributionFunction, DensityFunction, Frequency, PearsonProbability);
+            stats.SetRow(Rows, "second");
+            //foreach(var f in Items)
+            //{
+            //    var i = MathNet.Numerics.Distributions.Normal.InvCDF(0, 1, f.EmpiricalCDF);
+            //    f.EmpiricalCDFQuantile = i;
+            //    EmpiricalCDFQuantilies.Add(Math.Round(i, 2));
+            //}
+            //EmpiricalCDFQuantilies[EmpiricalCDFQuantilies.Count - 1] = 0;
+            //Items[Items.Count - 1].EmpiricalCDFQuantile = 0;
+            //1
             foreach(var f in Items)
             {
-                var i = MathNet.Numerics.Distributions.Normal.InvCDF(0, 1, f.EmpiricalCDF);
-                f.EmpiricalCDFQuantile = i;
-                EmpiricalCDFQuantilies.Add(Math.Round(i, 2));
+                var t = f.Variant;
+                T.Add(t);
+                double z;
+                if(f.EmpiricalCDF <= 0.5)
+                {
+                    z = Math.Log(2 * f.EmpiricalCDF);
+                }
+                else
+                {
+                    z = -Math.Log(2 * (1 - f.EmpiricalCDF));
+                }             
+                Z.Add(z);
+                
             }
-            EmpiricalCDFQuantilies[EmpiricalCDFQuantilies.Count - 1] = 0;
-            Items[Items.Count - 1].EmpiricalCDFQuantile = 0;
+            //
         }
     }
     public class DataItem
@@ -125,7 +158,16 @@ namespace Lab1.Class
         public double Bandwidth { get; set; }
         public double Max { get; set; }
         public double Min { get; set; }
-        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_, ObservableCollection<double> kde, double Bandwidth_)
+
+        public double U {  get; set; }
+        public double Lambda { get; set; }
+        public double UDeviation { get; set; }
+        public double LambdaDeviation { get; set; }
+        public double ULow { get; set; }
+        public double LambdaLow { get; set; }
+        public double UHigh { get; set; }
+        public double LambdaHigh { get; set; }
+        public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_, ObservableCollection<double> kde, double Bandwidth_, ObservableCollection<double> distribution, ObservableCollection<double> density, ObservableCollection<double> frequency_, PearsonProbability pearsonProbability)
         {
             //3
             M = M_;
@@ -239,6 +281,89 @@ namespace Lab1.Class
                 kde.Add(1 / (N * Bandwidth) * sum);
             }
             //
+            //2
+            U = Mean;
+            double tempSum = 0;
+            foreach(var x in items)
+            {
+                tempSum += Math.Pow(x.Variant, 2);
+            }
+            tempSum = tempSum / items.Count;
+            Lambda = Math.Sqrt(2) / Math.Sqrt(tempSum - Math.Pow(Mean, 2));
+            var d1 = (5 * Math.Pow(Lambda, 2)) / (4 * N);
+            LambdaDeviation = Math.Sqrt(d1);
+            var d2 = 2.0 / N * Math.Pow(Lambda, 2);
+            UDeviation = Math.Sqrt(d2);
+            ULow = U - T * UDeviation;
+            UHigh = U + T * UDeviation;
+            LambdaLow = Lambda - T * LambdaDeviation;
+            LambdaHigh = Lambda + T * LambdaDeviation;
+            //
+            //3
+           foreach(var x in items)
+            {
+                double f = 0.0;
+                if(x.Variant <= Mean)
+                {
+                    f = 0.5 * Math.Exp(Lambda * (x.Variant - U));
+                }
+                else if(x.Variant > Mean)
+                {
+                    f = 1 - 0.5 * Math.Exp(-Lambda * (x.Variant - U));
+                    
+                }
+                distribution.Add(f);
+                f = (Lambda / 2) * Math.Exp(-Lambda * Math.Abs(x.Variant - U));
+                density.Add(f);
+            }
+           //
+           //4
+           for(int i = 1; i < classBoundaries.Count; i++)
+            {
+                double p1 = 0.0;
+                double p2 = 0.0;
+                double x1 = 0.0;
+                double x2 = 0.0;
+                x1 = classBoundaries[i - 1];
+                x2 = classBoundaries[i];
+                if (x1 <= Mean)
+                {
+                    p1 = 0.5 * Math.Exp(Lambda * (x1 - U));
+                }
+                else if (x1 > Mean)
+                {
+                    p1 = 1 - 0.5 * Math.Exp(-Lambda * (x1 - U));
+
+                }
+                if (x2 <= Mean)
+                {
+                    p2 = 0.5 * Math.Exp(Lambda * (x2 - U));
+                }
+                else if (x2 > Mean)
+                {
+                    p2 = 1 - 0.5 * Math.Exp(-Lambda * (x2 - U));
+
+                }
+                frequency_.Add(N * (p2 - p1));
+            }
+            double x_ = 0.0;
+            for(int i = 0; i < classes.Count; i++)
+            {
+               x_ += Math.Pow(classes[i].Frequency - frequency_[i], 2) / frequency_[i];
+            }
+            var v_ = M - 1;
+            double x_cr = MathNet.Numerics.Distributions.ChiSquared.InvCDF(v_, 0.95);
+            double p_value = 1 - MathNet.Numerics.Distributions.ChiSquared.CDF(v_, x_);
+            pearsonProbability.X = x_;
+            pearsonProbability.X_CR = x_cr;
+            pearsonProbability.P = p_value;
+            //
+        }
+        public class PearsonProbability
+        {
+            public double X {  get; set; }
+            public double X_CR {  get; set; }
+            public double P { get; set; }
         }
         public class Row
         {
@@ -260,16 +385,25 @@ namespace Lab1.Class
         {
             return MathNet.Numerics.Distributions.StudentT.InvCDF(0.0, 1.0, (double)N - 1, 1 - alpha / 2);
         }
-        public void SetRow(ObservableCollection<Row> Rows)
+        public void SetRow(ObservableCollection<Row> Rows, string option)
         {
             Rows.Clear();
-            Rows.Add(new Row("Середнє арифметичне", Mean, MeanDeviation, MeanLow, MeanHigh));
-            Rows.Add(new Row("Медіана", Med, 0, MedLow, MedHigh));
-            Rows.Add(new Row("Середньоквадратичне відхилення", S_, S_Deviation, S_Low, S_High));
-            Rows.Add(new Row("Коефіцієнт асиметрії", A_, A_Deviation, A_Low, A_High));
-            Rows.Add(new Row("Коефіцієнт ексцесу", E_, E_Deviation, E_Low, E_High));
-            Rows.Add(new Row("Мінімум", Min,0,0,0));
-            Rows.Add(new Row("Максимум", Max,0,0,0));
+            if (option == "first")
+            {
+                Rows.Add(new Row("Середнє арифметичне", Mean, MeanDeviation, MeanLow, MeanHigh));
+                Rows.Add(new Row("Медіана", Med, 0, MedLow, MedHigh));
+                Rows.Add(new Row("Середньоквадратичне відхилення", S_, S_Deviation, S_Low, S_High));
+                Rows.Add(new Row("Коефіцієнт асиметрії", A_, A_Deviation, A_Low, A_High));
+                Rows.Add(new Row("Коефіцієнт ексцесу", E_, E_Deviation, E_Low, E_High));
+                Rows.Add(new Row("Мінімум", Min, 0, 0, 0));
+                Rows.Add(new Row("Максимум", Max, 0, 0, 0));
+            }
+            if(option == "second")
+            {
+                Rows.Add(new Row("Lambda", Lambda, LambdaDeviation, LambdaLow, LambdaHigh));
+                Rows.Add(new Row("u", U, UDeviation, ULow, UHigh));
+            }
+           
         }
         //8
         public List<double> FindAnomalies(ObservableCollection<double> data, out double leftInterval, out double rightInterval)

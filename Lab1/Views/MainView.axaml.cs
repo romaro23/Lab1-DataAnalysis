@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection.PortableExecutable;
+using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Lab1.Views;
@@ -37,21 +38,45 @@ public partial class MainView : UserControl
         FindAnomalies.Click += FindAnomalies_Click;
         RemoveAnomalies.Click += RemoveAnomalies_Click;
         Distribution.Click += Distribution_Click;
+        Pearson.Click += Pearson_Click;
     }
+
+    private void Pearson_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (MainViewModel.Data.Items.Count != 0)
+        {
+            var p = MainViewModel.Data.PearsonProbability;
+            CreateFrequencyHistogram();
+            string first = $"Статистика критерію: {p.X:F2} | ";
+            string second = $"Критичне значення: {p.X_CR:F2} | ";
+            string third = $"P-значення: {p.P:F5} | ";
+            string fourth;
+            if(p.X <= p.X_CR)
+            {
+                fourth = $"{p.X:F2} <= {p.X_CR:F2}, отже розподіл вірогідний";
+            }
+            else
+            {
+                fourth = $"{p.X:F2} > {p.X_CR:F2}, отже розподіл не вірогідний";
+            }
+            Probability.Text = first + second + third + fourth;
+        }
+    }
+
     //9
     private void Distribution_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if(MainViewModel.Data.Items.Count != 0)
         {
             ShowDistribution.IsOpen = true;
-            if (MainViewModel.Data.stats.IsAsymmetryZero() == true && MainViewModel.Data.stats.IsExcessZero() == true)
-            {
-                DistributionByCoefficient.Text = "Нормальний розподіл ідентифіковано";
-            }
-            else
-            {
-                DistributionByCoefficient.Text = "Нормальний розподіл не ідентифіковано";
-            }
+            //if (MainViewModel.Data.stats.IsAsymmetryZero() == true && MainViewModel.Data.stats.IsExcessZero() == true)
+            //{
+            //    DistributionByCoefficient.Text = "Нормальний розподіл ідентифіковано";
+            //}
+            //else
+            //{
+            //    DistributionByCoefficient.Text = "Нормальний розподіл не ідентифіковано";
+            //}
             CreateDistribution();
         }
         
@@ -100,6 +125,7 @@ public partial class MainView : UserControl
             Data.Bandwidth = value;
             MainViewModel.Data.ProccedData(PrimaryData);
             CreateHistogram();
+            CreateFrequencyHistogram();
             CreateEmpiricalCDF();
         }
         else
@@ -174,6 +200,46 @@ public partial class MainView : UserControl
             }
         }
     }
+    private void CreateFrequencyHistogram()
+    {
+        double[] heights1 = new double[MainViewModel.Data.Classes.Count];
+        double[] heights2 = new double[MainViewModel.Data.Frequency.Count];
+        double[] leftEdges = new double[MainViewModel.Data.ClassBoundaries.Count - 1];
+        double[] rightEdges = new double[MainViewModel.Data.ClassBoundaries.Count - 1];
+        for (int i = 0; i < MainViewModel.Data.Classes.Count; i++)
+        {
+            heights1[i] = MainViewModel.Data.Classes[i].Frequency;
+            heights2[i] = MainViewModel.Data.Frequency[i];
+        }
+        for (int i = 0; i < MainViewModel.Data.ClassBoundaries.Count - 1; i++)
+        {
+            leftEdges[i] = MainViewModel.Data.ClassBoundaries[i];
+            rightEdges[i] = MainViewModel.Data.ClassBoundaries[i + 1];
+        }
+        AvaPlot histogram = this.Find<AvaPlot>("Histogram");
+        histogram.Plot.Clear();
+        for (int i = 0; i < leftEdges.Length; i++)
+        {
+            double centerPosition = (leftEdges[i] + rightEdges[i]) / 2;
+            double barWidth = rightEdges[i] - leftEdges[i];
+            Bar bar = new Bar();
+            bar.Position = centerPosition;
+            bar.Value = heights1[i];
+            bar.Size = barWidth;
+            bar.FillColor = Color.FromARGB(0x80FFA500);
+            bar.Label = "Frequency";
+            Bar bar1 = new Bar();
+            bar1.Position = centerPosition;
+            bar1.Value = heights2[i];
+            bar1.Size = barWidth;
+            bar1.FillColor = Color.FromColor(System.Drawing.Color.Blue);
+            bar1.Label = "Theoretical frequency";
+            histogram.Plot.Add.Bar(bar1);
+            histogram.Plot.Add.Bar(bar);
+        }
+        histogram.Plot.Axes.Margins(0, 0);
+        histogram.Refresh();
+    }
     //4
     private void CreateHistogram()
     {
@@ -204,8 +270,11 @@ public partial class MainView : UserControl
         }
         //5
         var scaledKDE = MainViewModel.Data.KDE.Select(value => value * MainViewModel.Data.stats.H).ToArray();
-        var scatter = histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE, color: Color.FromColor(System.Drawing.Color.Blue));
-        scatter.LegendText = "KDE";
+        var scaledDensity = MainViewModel.Data.DensityFunction.Select(value => value * MainViewModel.Data.stats.H).ToArray();
+        var scatter1 = histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledKDE, color: Color.FromColor(System.Drawing.Color.Blue));
+        scatter1.LegendText = "KDE";
+        var scatter2 = histogram.Plot.Add.Scatter(PrimaryData.OrderBy(x => x).ToArray(), scaledDensity, color: Color.FromColor(System.Drawing.Color.Green));
+        scatter2.LegendText = "DensityFunction";
         histogram.Plot.Axes.Margins(0, 0);
         histogram.Plot.XLabel("Елементи з вибірки");
         histogram.Plot.YLabel("Відносна частота класів та значення KDE");
@@ -217,8 +286,10 @@ public partial class MainView : UserControl
         AvaPlot empiricalCDF = this.Find<AvaPlot>("EmpiricalCDF");
         empiricalCDF.Plot.Clear();
         var sp1 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.Variants.ToArray(), MainViewModel.Data.EmpiricalCDF.ToArray());
+        var sp2 = empiricalCDF.Plot.Add.Scatter(MainViewModel.Data.Variants.ToArray(), MainViewModel.Data.DistributionFunction.ToArray());
         sp1.ConnectStyle = ConnectStyle.StepHorizontal;
         sp1.LegendText = "EmpiricalCDF";
+        sp2.LegendText = "DistributionFunction";
         empiricalCDF.Plot.Axes.Margins(0, 0);
         empiricalCDF.Plot.XLabel("Елементи з вибірки");
         empiricalCDF.Plot.YLabel("Значення емпіричної функції");
@@ -227,17 +298,19 @@ public partial class MainView : UserControl
     //10
     private void CreateDistribution()
     {
-        double[] xValues = MainViewModel.Data.Variants.ToArray();
+        //double[] xValues = MainViewModel.Data.Variants.ToArray();
+        double[] xValues = MainViewModel.Data.T.ToArray();
         xValues = xValues.Take(xValues.Length - 1).ToArray();
-        double[] yValues = MainViewModel.Data.EmpiricalCDFQuantilies.ToArray();
+        //double[] yValues = MainViewModel.Data.EmpiricalCDFQuantilies.ToArray();
+        double[] yValues = MainViewModel.Data.Z.ToArray();
         yValues = yValues.Take(yValues.Length - 1).ToArray();
         AvaPlot distribution = this.Find<AvaPlot>("DistributionPlot");
         distribution.Plot.Clear();
         var scatter = distribution.Plot.Add.Scatter(xValues, yValues);
-        scatter.LegendText = "Значення квантилів";
+        //scatter.LegendText = "Значення квантилів";
         distribution.Plot.Axes.Margins(0, 0);
-        distribution.Plot.XLabel("Елементи з вибірки");
-        distribution.Plot.YLabel("Квантилі ЕФР");
+        //distribution.Plot.XLabel("Елементи з вибірки");
+        //distribution.Plot.YLabel("Квантилі ЕФР");
         distribution.Refresh();
     }
 

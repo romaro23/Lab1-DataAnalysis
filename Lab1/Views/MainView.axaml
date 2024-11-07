@@ -18,11 +18,13 @@
 	<Grid>
 		<Grid ZIndex="1" Height="700"  Width="800" Margin="750,100,0,0">
 			<Grid.RowDefinitions>
+				<RowDefinition Height="40"></RowDefinition>
 				<RowDefinition Height="400"/>
 				<RowDefinition Height="*"/>
 			</Grid.RowDefinitions>
-			<ScottPlot:AvaPlot Grid.Row="0" Name="Histogram"/>
-			<ScottPlot:AvaPlot Grid.Row="1" Name="EmpiricalCDF"/>
+			<TextBlock Name="Probability" Width="700"  TextWrapping="Wrap" HorizontalAlignment="Center"></TextBlock>
+			<ScottPlot:AvaPlot Grid.Row="1" Name="Histogram"/>
+			<ScottPlot:AvaPlot Grid.Row="2" Name="EmpiricalCDF"/>
 		</Grid>
 		<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="Files" Content="Open file" ></Button>
 		<Grid Width="680" HorizontalAlignment="Left" Margin="30,50,0,0">
@@ -81,15 +83,16 @@
 				<TextBox Watermark="Bandwidth" Width="30" x:Name="BandwidthBox" HorizontalAlignment="Center"></TextBox>
 				<Button Margin="5,0,5,0" x:Name="SetBandwidth" HorizontalAlignment="Center" Content="Set bandwidth" ></Button>
 				<Button Margin="5,0,5,0" x:Name="FindAnomalies" HorizontalAlignment="Center" Content="Find anomalies" ></Button>
-				<Button x:Name="Distribution" HorizontalAlignment="Center" Content="Distribution" ></Button>
+				<Button x:Name="Distribution" Margin="5,0,5,0" HorizontalAlignment="Center" Content="Distribution" ></Button>
+				<Button x:Name="Pearson" HorizontalAlignment="Center" Content="Pearson" ></Button>
 			</StackPanel>
 		</Grid>
 		<dialogHost:DialogHost x:Name="ShowDistribution" ZIndex="2" IsOpen="False" CloseOnClickAway="True">
 <dialogHost:DialogHost.DialogContent>
 				<StackPanel>
-					<TextBlock   Foreground="Black" Text="2.  Ідентифікація на основі коефіцієнтів асиметрії та ексцесу"/>
-					<TextBlock   Foreground="Black" x:Name="DistributionByCoefficient"/>
-					<TextBlock   Foreground="Black" Text="3. Ідентифікація на основі ймовірнісного паперу"/>
+					<!--<TextBlock   Foreground="Black" Text="2.  Ідентифікація на основі коефіцієнтів асиметрії та ексцесу"/>
+					<TextBlock   Foreground="Black" x:Name="DistributionByCoefficient"/> -->
+					<TextBlock   Foreground="Black" Text=" Ідентифікація на основі ймовірнісного паперу"/>
 					<ScottPlot:AvaPlot Height="200" Width="500" Name="DistributionPlot"/>
 				</StackPanel>
 			</dialogHost:DialogHost.DialogContent>

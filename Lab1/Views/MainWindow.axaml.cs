@@ -1,5 +1,7 @@
 ﻿using Avalonia.Controls;
 using System;
+using System.ComponentModel;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Lab1.Views;
 
@@ -8,12 +10,16 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        StartView.DataLoaded += StartView_DataLoaded;
+        Content = new MainView {ParentWindow = this};
     }
 
-    private void StartView_DataLoaded(object? sender, EventArgs e)
+    public void SetMainView()
     {
-        this.DataContext = new MainView();    
+        Content = new MainView { ParentWindow = this };
     }
 
+    public void SetSecondView()
+    {
+        Content = new SecondView { ParentWindow = this };
+    }
 }

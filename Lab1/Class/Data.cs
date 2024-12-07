@@ -122,55 +122,14 @@ namespace Lab1.Class
     }
     public class StatisticalCharacteristics
     {
-        public static Dictionary<int, double> Quantilies = new Dictionary<int, double>();
-        public double tA {  get; set; }
-        public double tE { get; set; }
-        public double M { get; set; }
-        public double H { get; set; }
-        public List<double> Sum2 { get; set; }
-        public List<double> Sum3 { get; set; }
-        public List<double> Sum4 { get; set; }
-        public double Mean { get; set; }
-        public double Med { get; set; }
-        public double S_ { get; set; }
-        public double A_ { get; set; }
-        public double E_ { get; set; }
-        public double MeanDeviation { get; set; }
-        public double S_Deviation { get; set; }
-        public double A_Deviation { get; set; }
-        public double E_Deviation { get; set; }
-        public int N { get; set; }
-        public double T { get; set; }
-        public double MeanLow { get; set; }
-        public double MeanHigh { get; set; }
-        public double MedLow { get; set; }
-        public double MedHigh { get; set; }
-        public double S_Low { get; set; }
-        public double S_High { get; set; }
-        public double A_Low { get; set; }
-        public double A_High { get; set; }
-        public double E_Low { get; set; }
-        public double E_High { get; set; }
-        public int J { get; set; }
-        public int K { get; set; }
-        public double Kernel { get; set; }
-        public double F { get; set; }
-        public double Bandwidth { get; set; }
-        public double Max { get; set; }
-        public double Min { get; set; }
-
-        public double U {  get; set; }
-        public double Lambda { get; set; }
-        public double UDeviation { get; set; }
-        public double LambdaDeviation { get; set; }
-        public double ULow { get; set; }
-        public double LambdaLow { get; set; }
-        public double UHigh { get; set; }
-        public double LambdaHigh { get; set; }
+        int N;
+        double Mean, Med, S_, A_, E_, MeanDeviation, S_Deviation, A_Deviation, E_Deviation, T, MeanLow, MeanHigh, MedLow, MedHigh, S_Low, S_High, A_Low, A_High, E_Low, E_High, Kernel, F, Bandwidth, Max, Min;
+        public double H;
+        double U, Lambda, UDeviation, LambdaDeviation, ULow, LambdaLow, UHigh, LambdaHigh;
         public StatisticalCharacteristics(ObservableCollection<double> data, ObservableCollection<DataItem> items, ObservableCollection<Class> classes, ObservableCollection<double> classBoundaries, double M_, ObservableCollection<double> kde, double Bandwidth_, ObservableCollection<double> distribution, ObservableCollection<double> density, ObservableCollection<double> frequency_, PearsonProbability pearsonProbability)
         {
             //3
-            M = M_;
+            double M = M_;
             Bandwidth = Bandwidth_;
             Max = items.Max(x => x.Variant);
             Min = items.Min(x => x.Variant);
@@ -224,9 +183,9 @@ namespace Lab1.Class
             else {
                 Med = sorted[N / 2];
             }
-            Sum2 = new List<double>();
-            Sum3 = new List<double>();
-            Sum4 = new List<double>();
+            List<double> Sum2 = new List<double>();
+            List<double> Sum3 = new List<double>();
+            List<double> Sum4 = new List<double>();
             for (int i = 0; i < data.Count; i++)
             {
                 var x = data[i] - Mean;
@@ -257,8 +216,8 @@ namespace Lab1.Class
             E_Low = E_ - T * E_Deviation;
             E_High = E_ + T * E_Deviation;
 
-            J = (int)(Math.Round((double)N / 2 - 1.96 * (Math.Sqrt(N) / 2)));
-            K = (int)(Math.Round((double)N / 2 + 1 + 1.96 * (Math.Sqrt(N) / 2)));
+            int J = (int)(Math.Round((double)N / 2 - 1.96 * (Math.Sqrt(N) / 2)));
+            int K = (int)(Math.Round((double)N / 2 + 1 + 1.96 * (Math.Sqrt(N) / 2)));
             var sortedData = data.OrderBy(x => x).ToList();
             MedLow = sortedData[J - 1];
             MedHigh = sortedData[K - 1];

@@ -9,5 +9,4 @@
         Icon="/Assets/avalonia-logo.ico"
         Title="Lab1"
 		>
-	<views:MainView/>
 </Window>

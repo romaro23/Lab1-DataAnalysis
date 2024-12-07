@@ -16,7 +16,7 @@
 	</UserControl.Resources>
 
 	<Grid>
-		<Grid ZIndex="1" Height="700"  Width="800" Margin="750,100,0,0">
+        <Grid ZIndex="1" Height="700"  Width="800" Margin="750,100,0,0">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="40"></RowDefinition>
 				<RowDefinition Height="400"/>
@@ -27,6 +27,7 @@
 			<ScottPlot:AvaPlot Grid.Row="2" Name="EmpiricalCDF"/>
 		</Grid>
 		<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="Files" Content="Open file" ></Button>
+        <Button VerticalAlignment="Top" HorizontalAlignment="Left" Margin="100,0,0,0" x:Name="ChangeView" Content="Lab3" ></Button>
 		<Grid Width="680" HorizontalAlignment="Left" Margin="30,50,0,0">
 			<Grid.RowDefinitions>
 				<RowDefinition Height="70"/>

@@ -1,0 +1,128 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:Lab1.Class"
+             xmlns:vm="clr-namespace:Lab1.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Lab1.SecondView"
+             x:DataType="vm:MainViewModel">
+	<UserControl.Resources>
+		<local:Converter x:Key="Converter"/>
+	</UserControl.Resources>
+	<Design.DataContext>
+		<vm:MainViewModel />
+	</Design.DataContext>
+	<Grid>
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="Auto"/>
+			</Grid.ColumnDefinitions>
+			<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="ChangeView" Content="Lab1,2" Grid.Column="0"></Button>
+			<Button VerticalAlignment="Top" HorizontalAlignment="Left" x:Name="LoadData" Content="Load data" Grid.Column="1"></Button>
+		</Grid>
+		<Grid VerticalAlignment="Top"
+            HorizontalAlignment="Left" Width="200" Height="300"
+              Margin="0,7,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto"/>
+				<ColumnDefinition Width="600"/>
+			</Grid.ColumnDefinitions>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="20"/>
+				<RowDefinition Height="230"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="230"/>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="230"/>
+			</Grid.RowDefinitions>
+			<Grid Width="400" VerticalAlignment="Top" HorizontalAlignment="Center" Grid.Row="3">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+					<RowDefinition Height="30"/>
+					<RowDefinition Height="50"/>
+                </Grid.RowDefinitions>
+				<TextBlock TextWrapping="Wrap" HorizontalAlignment="Center" Grid.Row="1" x:Name="depMean"></TextBlock>
+				<TextBlock TextWrapping="Wrap"  HorizontalAlignment="Center" Grid.Row="3" x:Name="depVariance"></TextBlock>
+				<TextBlock TextWrapping="Wrap"  HorizontalAlignment="Center" Grid.Row="5" x:Name="depWilcoxon"></TextBlock>
+				<TextBlock TextWrapping="Wrap"  HorizontalAlignment="Center" Grid.Row="7" x:Name="indepMean"></TextBlock>
+				<TextBlock TextWrapping="Wrap"  Grid.Row="9" HorizontalAlignment="Center" x:Name="indepVariance"></TextBlock>
+				<TextBlock TextWrapping="Wrap"  HorizontalAlignment="Center" Grid.Row="11" x:Name="indepVanDerVarden"></TextBlock>
+                <Button HorizontalAlignment="Center" x:Name="DepMeanButton" Content="DepMean" Grid.Row="0" />
+				<Button HorizontalAlignment="Center" x:Name="DepVarianceButton"   Content="DepVariance" Grid.Row="2" />
+				<Button  HorizontalAlignment="Center" x:Name="DepWilcoxonButton"  Content="DepWilcoxon's"  Grid.Row="4" />
+				<Button HorizontalAlignment="Center" x:Name="IndepMeanButton"    Content="IndepMean" Grid.Row="6" />
+				<Button HorizontalAlignment="Center" x:Name="IndepVarianceButton"    Content="IndepVariance" Grid.Row="8" />
+				<Button HorizontalAlignment="Center" x:Name="IndepVanDerVardenButton"    Content="IndepVanDerVarden" Grid.Row="10" />
+            </Grid>
+			<TextBlock HorizontalAlignment="Center" Grid.Row="0" Grid.Column="1">First sample</TextBlock>
+			<TextBlock HorizontalAlignment="Center" Grid.Row="2" Grid.Column="1">Second sample</TextBlock>
+			<TextBlock HorizontalAlignment="Center" Grid.Row="4" Grid.Column="1">Difference sample</TextBlock>
+
+			<DataGrid Margin="5"
+                      IsReadOnly="True"
+ItemsSource="{Binding CombInstanceData}"                      GridLinesVisibility="All"
+Grid.Column="0"
+Grid.Row="1"                      BorderThickness="1" BorderBrush="Gray"
+            >
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="N"  Binding="{Binding Index}"/>
+					<DataGridTextColumn Header="First sample"  Binding="{Binding FirstValue}"/>
+					<DataGridTextColumn Header="Second sample"  Binding="{Binding SecondValue}"/>
+				</DataGrid.Columns>
+			</DataGrid>
+			<DataGrid Margin="5" Grid.Column="1"			ItemsSource="{Binding FirstSample}"
+                     Grid.Row="1" IsReadOnly="True"
+                      GridLinesVisibility="All"
+                      BorderThickness="1" BorderBrush="Gray"
+            >
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Характеристика"  Binding="{Binding InstanceCharacterisation}"/>
+					<DataGridTextColumn Header="Оцінка"  Binding="{Binding Estimate,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="Середньоквадратичне відхилення оцінки" Binding="{Binding Deviation,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (лівий)"  Binding="{Binding LeftInterval,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (правий)"  Binding="{Binding RightInterval,Converter={StaticResource Converter}}"/>
+				</DataGrid.Columns>
+			</DataGrid>
+			<DataGrid Margin="5" Grid.Row="3" Grid.Column="1"			ItemsSource="{Binding SecondSample}"
+                      IsReadOnly="True"
+                      GridLinesVisibility="All"
+                      BorderThickness="1" BorderBrush="Gray"
+            >
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Характеристика"  Binding="{Binding InstanceCharacterisation}"/>
+					<DataGridTextColumn Header="Оцінка"  Binding="{Binding Estimate,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="Середньоквадратичне відхилення оцінки" Binding="{Binding Deviation,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (лівий)"  Binding="{Binding LeftInterval,Converter={StaticResource Converter}}"/>
+					<DataGridTextColumn Header="95% довірчий інтервал для характеристики (правий)"  Binding="{Binding RightInterval,Converter={StaticResource Converter}}"/>
+				</DataGrid.Columns>
+			</DataGrid>
+            <DataGrid Margin="5" Grid.Row="5" Grid.Column="1"			ItemsSource="{Binding DiffSample}"
+                      IsReadOnly="True"
+                      GridLinesVisibility="All"
+                      BorderThickness="1" BorderBrush="Gray"
+            >
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Характеристика"  Binding="{Binding InstanceCharacterisation}"/>
+                    <DataGridTextColumn Header="Оцінка"  Binding="{Binding Estimate,Converter={StaticResource Converter}}"/>
+                    <DataGridTextColumn Header="Середньоквадратичне відхилення оцінки" Binding="{Binding Deviation,Converter={StaticResource Converter}}"/>
+                    <DataGridTextColumn Header="95% довірчий інтервал для характеристики (лівий)"  Binding="{Binding LeftInterval,Converter={StaticResource Converter}}"/>
+                    <DataGridTextColumn Header="95% довірчий інтервал для характеристики (правий)"  Binding="{Binding RightInterval,Converter={StaticResource Converter}}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+		</Grid>
+
+	</Grid>
+</UserControl>

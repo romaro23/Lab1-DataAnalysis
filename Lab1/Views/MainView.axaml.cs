@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using DynamicData;
 using Lab1.Class;
@@ -25,13 +26,13 @@ namespace Lab1.Views;
 public partial class MainView : UserControl
 {
     ObservableCollection<double> PrimaryData = new ObservableCollection<double>();
+    public MainWindow ParentWindow { get; set; }
     public MainView()
     {
         InitializeComponent();
         string baseDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\Lab1"));
         string relativePath = "Assets\\data_lab1,2";
         string fullPath = Path.Combine(baseDirectory, relativePath);
-        LoadQuantilies(fullPath);
         SetButton.Click += SetButton_Click;
         SetBandwidth.Click += SetBandwidth_Click;
         Files.Click += Files_Click;
@@ -39,6 +40,12 @@ public partial class MainView : UserControl
         RemoveAnomalies.Click += RemoveAnomalies_Click;
         Distribution.Click += Distribution_Click;
         Pearson.Click += Pearson_Click;
+        ChangeView.Click += ChangeView_Click;
+    }
+
+    private void ChangeView_Click(object? sender, RoutedEventArgs e)
+    {
+        ParentWindow.SetSecondView();
     }
 
     private void Pearson_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -93,28 +100,28 @@ public partial class MainView : UserControl
     //8
     private void FindAnomalies_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if(PrimaryData.Count != 0)
+        if (PrimaryData.Count == 0)
         {
-            ShowAnomalies.IsOpen = true;
-            double leftInterval;
-            double rightInterval;
-            List<double> anomalies = MainViewModel.Data.stats.FindAnomalies(PrimaryData, out leftInterval, out rightInterval);
-            var selectedValues = anomalies.Select(index => PrimaryData[(int)index]);
-            AnomaliesList.Text = "Anomalies: " + string.Join(", ", selectedValues);
-            AvaPlot Anomalies = this.Find<AvaPlot>("Anomalies");
-            Anomalies.Plot.Clear();
-            var scatter = Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
-            scatter.LegendText = "Розкид значень";
-            var line1 = Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
-            line1.LegendText = "Межі";
-            Anomalies.Plot.Add.HorizontalLine(rightInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
-            Anomalies.Plot.Axes.Margins(0, 0);
-            Anomalies.Plot.XLabel("Індекс значення");
-            Anomalies.Plot.YLabel("Значення з вибірки");
-            Anomalies.Refresh();
-            
+            return;
         }
-        
+        ShowAnomalies.IsOpen = true;
+        double leftInterval;
+        double rightInterval;
+        List<double> anomalies = MainViewModel.Data.stats.FindAnomalies(PrimaryData, out leftInterval, out rightInterval);
+        var selectedValues = anomalies.Select(index => PrimaryData[(int)index]);
+        AnomaliesList.Text = "Anomalies: " + string.Join(", ", selectedValues);
+        AvaPlot Anomalies = this.Find<AvaPlot>("Anomalies");
+        Anomalies.Plot.Clear();
+        var scatter = Anomalies.Plot.Add.Scatter(Enumerable.Range(0, PrimaryData.Count).Select(x => (double)x).ToArray(), PrimaryData.ToArray());
+        scatter.LegendText = "Розкид значень";
+        var line1 = Anomalies.Plot.Add.HorizontalLine(leftInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+        line1.LegendText = "Межі";
+        Anomalies.Plot.Add.HorizontalLine(rightInterval, 2, ScottPlot.Color.FromColor(System.Drawing.Color.Red), LinePattern.Dashed);
+        Anomalies.Plot.Axes.Margins(0, 0);
+        Anomalies.Plot.XLabel("Індекс значення");
+        Anomalies.Plot.YLabel("Значення з вибірки");
+        Anomalies.Refresh();
+
     }
     //
     private void SetBandwidth_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -142,31 +149,30 @@ public partial class MainView : UserControl
             Title = "Open Text File",
             AllowMultiple = false,
         });
-        if (files != null && files.Count > 0)
+        if (files == null && files.Count <= 0)
         {
-            var filePath = files[0].Path;
-            using (var stream = await files[0].OpenReadAsync())
-            using (var reader = new StreamReader(stream))
-            {
-                string line;                
-                PrimaryData.Clear();
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
+            return;
+        }
+        var filePath = files[0].Path;
+        await using var stream = await files[0].OpenReadAsync();
+        using var reader = new StreamReader(stream);
+        string line;
+        PrimaryData.Clear();
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
 
-                    var values = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var value in values)
-                    {
-                        if (double.TryParse(value, out var number))
-                        {
-                            PrimaryData.Add(number);
-                        }
-                    }
+            var values = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var value in values)
+            {
+                if (double.TryParse(value, out var number))
+                {
+                    PrimaryData.Add(number);
                 }
-                MainViewModel.Data.ProccedData(PrimaryData);
-                CreateHistogram();
-                CreateEmpiricalCDF();
             }
         }
+        MainViewModel.Data.ProccedData(PrimaryData);
+        CreateHistogram();
+        CreateEmpiricalCDF();
     }
     private void SetButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -185,21 +191,7 @@ public partial class MainView : UserControl
         
     }
 
-    private void LoadQuantilies(string path)
-    {
-        if (Directory.Exists(path)) 
-        {
-            var files = Directory.GetFiles(path);
-            string[] lines = File.ReadAllLines(files[0]);
-            foreach (string line in lines)
-            {
-                string[] parts = line.Split(' ');
-                int key = int.Parse(parts[0]);
-                double value = double.Parse(parts[1]);
-                Class.StatisticalCharacteristics.Quantilies.Add(key, value);
-            }
-        }
-    }
+
     private void CreateFrequencyHistogram()
     {
         double[] heights1 = new double[MainViewModel.Data.Classes.Count];

@@ -93,9 +93,19 @@ namespace Lab1.Class
             double s2 = StandardDeviation(secondSample, mean2, n2);
             double variance1 = Math.Pow(s1, 2);
             double variance2 = Math.Pow(s2, 2);
-            double f = variance1 / variance2;
-            double v1 = n1 - 1;
-            double v2 = n2 - 1;
+            double f, v1, v2;
+            if (variance1 >= variance2)
+            {
+                f = variance1 / variance2;
+                v1 = n1 - 1;
+                v2 = n2 - 1;
+            }
+            else
+            {
+                f = variance2 / variance1;
+                v1 = n2 - 1;
+                v2 = n1 - 1;
+            }
             double fisher = GetFisherQuantile(v1, v2, 0.05);
             double t;
             double s = ((n1 - 1) * variance1 + (n2 - 1) * variance2) / (n1 + n2 - 2);

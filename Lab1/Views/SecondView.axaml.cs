@@ -170,21 +170,30 @@ public partial class SecondView : UserControl
         while ((line = await reader.ReadLineAsync()) != null)
         {
             var values = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
             if (values.Length >= 1 && double.TryParse(values[0], out var firstNumber))
             {
-                FirstPrimaryData.Add(firstNumber);
-            }
-            else
-            {
-                FirstPrimaryData.Add(double.NaN);
-            }
-            if (values.Length >= 2 && double.TryParse(values[1], out var secondNumber))
-            {
-                SecondPrimaryData.Add(secondNumber);
-            }
-            else
-            {
-                SecondPrimaryData.Add(double.NaN);
+                if (values.Length >= 2 && double.TryParse(values[1], out var category))
+                {
+                    if (category == 0.0)
+                    {
+                        FirstPrimaryData.Add(firstNumber);
+                    }
+                    else if (category == 1.0)
+                    {
+                        SecondPrimaryData.Add(firstNumber);
+                    }
+                    else
+                    {
+                        FirstPrimaryData.Add(firstNumber);
+                        SecondPrimaryData.Add(category);
+                    }
+                }
+                else
+                {
+                    FirstPrimaryData.Add(firstNumber);
+                    SecondPrimaryData.Add(double.NaN);
+                }
             }
         }
         MainViewModel.CombInstanceData.Clear();
